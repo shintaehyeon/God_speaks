@@ -20,7 +20,15 @@ class ShrineApp extends StatelessWidget {
         '/profile': (context) => const ProfilePage(),
         '/wishlist': (context) => const WishlistPage(),
       },
-      theme: ThemeData.light(useMaterial3: true),
+      theme: ThemeData.light(useMaterial3: true).copyWith(
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF8D8686), // Muted grey from slide
+          foregroundColor: Colors.white,      // White text
+          centerTitle: true,
+          iconTheme: IconThemeData(color: Colors.white),
+          actionsIconTheme: IconThemeData(color: Colors.white),
+        ),
+      ),
     );
   }
 }

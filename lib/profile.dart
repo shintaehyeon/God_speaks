@@ -22,11 +22,15 @@ class ProfilePage extends StatelessWidget {
     }
 
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Profile'),
+        backgroundColor: Colors.black,
+        elevation: 0,
+        title: const Text('Profile', style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.exit_to_app),
+            icon: const Icon(Icons.exit_to_app, color: Colors.white),
             onPressed: () => _logout(context),
           ),
         ],
@@ -44,29 +48,56 @@ class ProfilePage extends StatelessWidget {
           final name = isAnonymous ? 'Anonymous' : (data['name'] ?? 'No Name');
           final statusMessage = data['status_message'] ?? 'I promise to take the test honestly before GOD.';
 
-          return ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: NetworkImage(imageUrl),
-              ),
-              const SizedBox(height: 16),
-              Text('UID: ${user.uid}'),
-              Text('Email: $email'),
-              const SizedBox(height: 32),
-              Text(
-                name,
-                style: const TextStyle(fontSize: 24, fontStyle: FontStyle.italic),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                statusMessage,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Image.network(
+                    imageUrl,
+                    width: 220,
+                    height: 220,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 48),
+                Text(
+                  '< ${user.uid} >',
+                  style: const TextStyle(
+                    fontSize: 20, 
+                    color: Colors.white, 
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Divider(color: Colors.white54, thickness: 1),
+                const SizedBox(height: 16),
+                Text(
+                  email,
+                  style: const TextStyle(fontSize: 16, color: Colors.white70),
+                ),
+                const SizedBox(height: 48),
+                Text(
+                  'Taehyeon Shin (22101046)',
+                  style: const TextStyle(
+                    fontSize: 18, 
+                    color: Colors.white, 
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  statusMessage,
+                  style: const TextStyle(
+                    fontSize: 16, 
+                    color: Colors.white70,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),

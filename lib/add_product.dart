@@ -99,7 +99,30 @@ class _AddProductPageState extends State<AddProductPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.productToEdit == null ? 'Add Product' : 'Edit Product'),
+        leadingWidth: 90.0,
+        leading: TextButton(
+          onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(color: Colors.black87, fontSize: 16),
+          ),
+        ),
+        title: Text(widget.productToEdit == null ? 'Add' : 'Edit'),
+        centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: _saveProduct,
+            child: const Text(
+              'Save',
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())
@@ -132,17 +155,16 @@ class _AddProductPageState extends State<AddProductPage> {
                     controller: _priceController,
                     decoration: const InputDecoration(labelText: 'Price'),
                     keyboardType: TextInputType.number,
-                    validator: (v) => v!.isEmpty ? 'Enter price' : null,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Enter price';
+                      if (int.tryParse(v) == null) return 'Price must be a valid number';
+                      return null;
+                    },
                   ),
                   TextFormField(
                     controller: _descController,
                     decoration: const InputDecoration(labelText: 'Description'),
                     validator: (v) => v!.isEmpty ? 'Enter description' : null,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _saveProduct,
-                    child: const Text('Save'),
                   ),
                 ],
               ),

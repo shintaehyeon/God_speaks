@@ -20,7 +20,14 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SHRINE'),
+        leading: IconButton(
+          icon: const Icon(Icons.person),
+          onPressed: () {
+            Navigator.pushNamed(context, '/profile');
+          },
+        ),
+        title: const Text('Main'),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart),
@@ -32,12 +39,6 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.add),
             onPressed: () {
               Navigator.pushNamed(context, '/add');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.pushNamed(context, '/profile');
             },
           ),
         ],
@@ -53,8 +54,8 @@ class _HomePageState extends State<HomePage> {
                 DropdownButton<String>(
                   value: _sortOrder,
                   items: const [
-                    DropdownMenuItem(value: 'ASC', child: Text('Ascending')),
-                    DropdownMenuItem(value: 'DESC', child: Text('Descending')),
+                    DropdownMenuItem(value: 'ASC', child: Text('ASC')),
+                    DropdownMenuItem(value: 'DESC', child: Text('DESC')),
                   ],
                   onChanged: (value) {
                     setState(() {

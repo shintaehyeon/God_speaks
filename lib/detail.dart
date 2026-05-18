@@ -65,7 +65,7 @@ class _DetailPageState extends State<DetailPage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('I LIKE IT!')),
+          const SnackBar(content: Text('I LIKE IT !')),
         );
       }
     }
@@ -106,23 +106,69 @@ class _DetailPageState extends State<DetailPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(child: Text(_product.name, style: Theme.of(context).textTheme.headlineSmall)),
-                IconButton(
-                  icon: const Icon(Icons.thumb_up),
-                  onPressed: _handleLike,
+                Expanded(
+                  child: Text(
+                    _product.name,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
                 ),
-                Text('${_product.likes}'),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        _product.likedBy.contains(currentUser?.uid)
+                            ? Icons.thumb_up
+                            : Icons.thumb_up_outlined,
+                        color: _product.likedBy.contains(currentUser?.uid)
+                            ? Colors.red
+                            : Colors.grey,
+                      ),
+                      onPressed: _handleLike,
+                    ),
+                    Text(
+                      '${_product.likes}',
+                      style: TextStyle(
+                        color: _product.likedBy.contains(currentUser?.uid)
+                            ? Colors.red
+                            : Colors.grey,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-            Text('\$${_product.price}', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(
+              '\$ ${_product.price}',
+              style: const TextStyle(
+                fontSize: 20,
+                color: Colors.blue,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 16),
             const Divider(),
             Text(_product.description),
             const SizedBox(height: 16),
             const Divider(),
-            Text('creator: ${_product.creatorUid}'),
-            Text('${_product.creationTime.toDate()} Created'),
-            Text('${_product.updateTime.toDate()} Modified'),
+            Text(
+              'creator: ${_product.creatorUid}',
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            Text(
+              '${_product.creationTime.toDate()} Created',
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            Text(
+              '${_product.updateTime.toDate()} Modified',
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
+            ),
           ],
         ),
       ),
