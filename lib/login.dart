@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'state/sermon_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -11,201 +10,275 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  
+  bool _isSignUp = false;
+  String? _errorMessage;
 
-  Future<void> _checkAndCreateUser(User user, {bool isAnonymous = false}) async {
-    final userDoc = _firestore.collection('user').doc(user.uid);
-    final docSnapshot = await userDoc.get();
-
-    if (!docSnapshot.exists) {
-      if (isAnonymous) {
-        await userDoc.set({
-          'uid': user.uid,
-          'status_message': 'I promise to take the test honestly before GOD.',
-        });
-      } else {
-        await userDoc.set({
-          'uid': user.uid,
-          'name': user.displayName ?? 'Unknown',
-          'email': user.email ?? 'Unknown',
-          'status_message': 'I promise to take the test honestly before GOD.',
-        });
-      }
-    }
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    super.dispose();
   }
 
-  Future<void> _signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return;
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() {
+      _errorMessage = null;
+    });
+
+    final sermonProvider = Provider.of<SermonProvider>(context, listen: false);
+    bool success = false;
+
+    if (_isSignUp) {
+      success = await sermonProvider.signUp(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+        _nameController.text.trim(),
       );
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      if (userCredential.user != null) {
-        await _checkAndCreateUser(userCredential.user!);
-        if (mounted) Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      debugPrint('Google Sign-in Error: $e');
+    } else {
+      success = await sermonProvider.signIn(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
     }
-  }
 
-  Future<void> _signInAnonymously() async {
-    try {
-      final UserCredential userCredential = await _auth.signInAnonymously();
-      if (userCredential.user != null) {
-        await _checkAndCreateUser(userCredential.user!, isAnonymous: true);
-        if (mounted) Navigator.pushReplacementNamed(context, '/home');
+    if (success) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/navigation');
       }
-    } catch (e) {
-      debugPrint('Anonymous Sign-in Error: $e');
+    } else {
+      setState(() {
+        _errorMessage = _isSignUp 
+            ? "Failed to sign up. Check connection or try another email."
+            : "Invalid credentials. Please try again.";
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final sermonProvider = Provider.of<SermonProvider>(context);
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FB),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Image.asset(
-                  'assets/diamond.png',
-                  width: 50,
-                  height: 50,
-                  color: Colors.black87,
+                // Premium Brand Header
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEBF2FF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.translate_rounded,
+                      size: 44,
+                      color: Color(0xFF2F69F8),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'SHRINE',
-                  style: TextStyle(
-                    fontSize: 20,
+                const SizedBox(height: 20),
+                Text(
+                  'Smart Sermon\nTranslator',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 3.0,
-                    color: Colors.black87,
+                    color: const Color(0xFF1E293B),
+                    height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 80),
-                
-                // Google Sign-in Button
-                GestureDetector(
-                  onTap: _signInWithGoogle,
-                  child: Container(
-                    width: 280,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4.0),
-                      child: Row(
+                const SizedBox(height: 8),
+                Text(
+                  'Real-time translation & intelligent summarization',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // Form card
+                Card(
+                  elevation: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            color: const Color(0xFFC53929),
-                            alignment: Alignment.center,
-                            child: const Text(
-                              'G',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                                fontFamily: 'Roboto',
-                              ),
+                          Text(
+                            _isSignUp ? 'Create an Account' : 'Welcome Back',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF1E293B),
                             ),
                           ),
-                          Expanded(
-                            child: Container(
-                              color: const Color(0xFFF08F8F),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'GOOGLE',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  letterSpacing: 1.2,
+                          const SizedBox(height: 20),
+                          
+                          if (_isSignUp) ...[
+                            TextFormField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                labelText: 'Full Name',
+                                hintText: 'Alex Johnson',
+                                prefixIcon: const Icon(Icons.person_outline_rounded),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
+                                contentPadding: const EdgeInsets.symmetric(vertical: 16),
                               ),
+                              validator: (val) => val == null || val.trim().isEmpty ? 'Please enter your name' : null,
                             ),
+                            const SizedBox(height: 16),
+                          ],
+
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              labelText: 'Email Address',
+                              hintText: 'alex@example.com',
+                              prefixIcon: const Icon(Icons.email_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) return 'Please enter your email';
+                              if (!val.contains('@')) return 'Please enter a valid email';
+                              return null;
+                            },
                           ),
+                          const SizedBox(height: 16),
+
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              hintText: '••••••••',
+                              prefixIcon: const Icon(Icons.lock_outline_rounded),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            validator: (val) => val == null || val.length < 6 ? 'Password must be at least 6 characters' : null,
+                          ),
+                          
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              _errorMessage!,
+                              style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+
+                          const SizedBox(height: 24),
+                          
+                          sermonProvider.isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : ElevatedButton(
+                                  onPressed: _submit,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF2F69F8),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    _isSignUp ? 'Sign Up' : 'Log In',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                ),
                         ],
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                
-                // Guest Button
-                GestureDetector(
-                  onTap: _signInAnonymously,
-                  child: Container(
-                    width: 280,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+
+                // Switch Sign In / Sign Up Mode
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _isSignUp ? 'Already have an account? ' : "Don't have an account? ",
+                      style: const TextStyle(color: Color(0xFF64748B)),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            color: Colors.black,
-                            alignment: Alignment.center,
-                            child: const Text(
-                              '?',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                                fontFamily: 'Roboto',
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Container(
-                              color: const Color(0xFFBDC1C6),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Guest',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isSignUp = !_isSignUp;
+                          _errorMessage = null;
+                        });
+                      },
+                      child: Text(
+                        _isSignUp ? 'Log In' : 'Sign Up',
+                        style: const TextStyle(color: Color(0xFF2F69F8), fontWeight: FontWeight.bold),
                       ),
                     ),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Divider
+                Row(
+                  children: const [
+                    Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('OR CONTINUE WITH', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                    Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Anonymous Guest Sign-in Option
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    setState(() { _errorMessage = null; });
+                    final sermonProvider = Provider.of<SermonProvider>(context, listen: false);
+                    // Standard guest fallback simulation in provider
+                    bool success = await sermonProvider.signUp(
+                      "guest_${DateTime.now().millisecondsSinceEpoch}@sermon.com",
+                      "guest12345",
+                      "Alex Johnson",
+                    );
+                    if (success && mounted) {
+                      Navigator.pushReplacementNamed(context, '/navigation');
+                    } else {
+                      setState(() { _errorMessage = "Guest sign-in failed. Try again."; });
+                    }
+                  },
+                  icon: const Icon(Icons.person_pin_rounded, color: Color(0xFF64748B)),
+                  label: const Text('Sign in as Guest', style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
                   ),
                 ),
               ],

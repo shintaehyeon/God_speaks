@@ -1,34 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'login.dart';
-import 'home.dart';
-import 'add_product.dart';
-import 'profile.dart';
-import 'wishlist.dart';
+import 'state/sermon_provider.dart';
+import 'main_navigation.dart';
+import 'live_translation.dart';
 
-class ShrineApp extends StatelessWidget {
-  const ShrineApp({Key? key}) : super(key: key);
+class SermonTranslatorApp extends StatelessWidget {
+  const SermonTranslatorApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Shrine',
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => const LoginPage(),
-        '/home': (context) => const HomePage(),
-        '/add': (context) => const AddProductPage(),
-        '/profile': (context) => const ProfilePage(),
-        '/wishlist': (context) => const WishlistPage(),
+    return Consumer<SermonProvider>(
+      builder: (context, sermonProvider, _) {
+        return MaterialApp(
+          title: 'Smart Sermon Translator',
+          debugShowCheckedModeBanner: false,
+          initialRoute: sermonProvider.user != null ? '/navigation' : '/login',
+          routes: {
+            '/login': (context) => const LoginPage(),
+            '/navigation': (context) => const MainNavigationPage(),
+            '/live': (context) => const LiveTranslationPage(),
+          },
+          theme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.light,
+            primaryColor: const Color(0xFF2F69F8), // Sleek electric blue
+            scaffoldBackgroundColor: const Color(0xFFF8F9FB), // Modern clean off-white
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF2F69F8),
+              primary: const Color(0xFF2F69F8),
+              secondary: const Color(0xFFEBF2FF),
+              background: const Color(0xFFF8F9FB),
+            ),
+            cardTheme: const CardTheme(
+              color: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16)),
+                side: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+              ),
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.white,
+              foregroundColor: Color(0xFF1E293B),
+              elevation: 0,
+              centerTitle: true,
+              titleTextStyle: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+              iconTheme: IconThemeData(color: Color(0xFF64748B)),
+            ),
+          ),
+        );
       },
-      theme: ThemeData.light(useMaterial3: true).copyWith(
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF8D8686), // Muted grey from slide
-          foregroundColor: Colors.white,      // White text
-          centerTitle: true,
-          iconTheme: IconThemeData(color: Colors.white),
-          actionsIconTheme: IconThemeData(color: Colors.white),
-        ),
-      ),
     );
   }
 }
