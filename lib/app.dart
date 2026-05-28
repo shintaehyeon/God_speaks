@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'login.dart';
+import 'splash.dart';
 import 'state/sermon_provider.dart';
 import 'main_navigation.dart';
 import 'live_translation.dart';
@@ -15,8 +16,9 @@ class SermonTranslatorApp extends StatelessWidget {
         return MaterialApp(
           title: 'Smart Sermon Translator',
           debugShowCheckedModeBanner: false,
-          initialRoute: sermonProvider.user != null ? '/navigation' : '/login',
+          initialRoute: '/splash',
           routes: {
+            '/splash': (context) => const SplashPage(),
             '/login': (context) => const LoginPage(),
             '/navigation': (context) => const MainNavigationPage(),
             '/live': (context) => const LiveTranslationPage(),

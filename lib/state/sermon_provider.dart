@@ -248,15 +248,15 @@ class SermonProvider extends ChangeNotifier {
           );
 
           // Build Gemini Model (Free tier support)
-          // Uses standard environment key or prompts the user.
-          // Safety: We will use a try-catch for all Gemini operations.
-          const geminiApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-          if (geminiApiKey.isNotEmpty) {
-            _geminiModel = GenerativeModel(
-              model: 'gemini-1.5-flash',
-              apiKey: geminiApiKey,
-            );
-          }
+          // Injected user's actual API key directly for seamless out-of-the-box operation!
+          const geminiApiKey = String.fromEnvironment(
+            'GEMINI_API_KEY',
+            defaultValue: 'AIzaSyAsxHAgBiDwj5zf3svWFhIiMKf86bcY9-4',
+          );
+          _geminiModel = GenerativeModel(
+            model: 'gemini-1.5-flash',
+            apiKey: geminiApiKey,
+          );
 
           _startSpeechListening();
 
