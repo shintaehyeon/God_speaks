@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/sermon_summary.dart';
 import '../models/saved_item.dart';
@@ -26,7 +25,6 @@ class SermonProvider extends ChangeNotifier {
   // Advanced AI and Speech Engines
   stt.SpeechToText _speech = stt.SpeechToText();
   bool _speechInitialized = false;
-  OnDeviceTranslator? _translator;
   GenerativeModel? _geminiModel;
   String _accumulatedKoreanText = ""; // For summarizing at the end
 
@@ -240,12 +238,6 @@ class SermonProvider extends ChangeNotifier {
 
         if (_speechInitialized) {
           _liveTranslationText = "마이크가 활성화되었습니다. 한국어로 설교를 말씀하세요...";
-          
-          // Setup On-Device Translator (ML Kit)
-          _translator = OnDeviceTranslator(
-            sourceLanguage: TranslateLanguage.korean,
-            targetLanguage: TranslateLanguage.english,
-          );
 
           // Build Gemini Model (Free tier support)
           // Injected user's actual API key directly for seamless out-of-the-box operation!
@@ -351,14 +343,22 @@ class SermonProvider extends ChangeNotifier {
         if (result.recognizedWords.isNotEmpty) {
           String newWords = result.recognizedWords;
           
-          // Translate to English in real-time using on-device ML Kit
-          if (_translator != null) {
+          // Translate to English in real-time using super-fast Gemini AI
+          if (_geminiModel != null) {
             try {
-              String translated = await _translator!.translateText(newWords);
-              _liveTranslationText = _accumulatedKoreanText + translated;
+              final translationPrompt = "You are a professional sermon translator. Translate the following Korean spoken sentence into natural, graceful, and holy English for a sermon transcription. Do not include any explanations, just provide the direct English translation. Sentence: \"$newWords\"";
+              final response = await _geminiModel!.generateContent([Content.text(translationPrompt)]);
+              if (response.text != null && _isRecording) {
+                String translated = response.text!.trim();
+                // Strip any surrounding quotes
+                if (translated.startsWith('"') && translated.endsWith('"')) {
+                  translated = translated.substring(1, translated.length - 1);
+                }
+                _liveTranslationText = _accumulatedKoreanText + translated;
+              }
             } catch (e) {
-              print("ML Kit translation error: $e");
-              _liveTranslationText = _accumulatedKoreanText + " [Translation processing...] " + newWords;
+              print("Gemini translation error: $e");
+              _liveTranslationText = _accumulatedKoreanText + newWords;
             }
           } else {
             _liveTranslationText = _accumulatedKoreanText + newWords;
@@ -404,7 +404,7 @@ class SermonProvider extends ChangeNotifier {
     _waveValues = List.filled(15, 0.1);
 
     // Save actual text to database using Gemini AI summary if enabled and text exists
-    if (_translator != null && _accumulatedKoreanText.isNotEmpty && _geminiModel != null) {
+    if (_accumulatedKoreanText.isNotEmpty && _geminiModel != null) {
       try {
         final prompt = "다음은 오늘 나눈 설교 번역 텍스트입니다. 이 설교 요약본을 만들어 주세요. 제목, 핵심 3줄 요약, 중심 성경 구절을 포함해야 합니다. 형식은 한국어로 해주세요. 텍스트: $_accumulatedKoreanText";
         final response = await _geminiModel!.generateContent([Content.text(prompt)]);
@@ -426,8 +426,6 @@ class SermonProvider extends ChangeNotifier {
       }
     }
 
-    _translator?.close();
-    _translator = null;
     notifyListeners();
   }
 

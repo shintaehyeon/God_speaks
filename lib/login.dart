@@ -94,20 +94,21 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Smart Sermon\nTranslator',
+                  '솔로몬 AI',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w900,
                     color: const Color(0xFF1E293B),
-                    height: 1.2,
+                    letterSpacing: 1.5,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Real-time translation & intelligent summarization',
+                  '지혜롭고 영감 있는 실시간 예배 번역기',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -196,20 +197,54 @@ class _LoginPageState extends State<LoginPage> {
                           
                           sermonProvider.isLoading
                               ? const Center(child: CircularProgressIndicator())
-                              : ElevatedButton(
-                                  onPressed: _submit,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF2F69F8),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: _submit,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF2F69F8),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _isSignUp ? '가입하고 로그인' : '이메일 로그인',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                      ),
                                     ),
-                                  ),
-                                  child: Text(
-                                    _isSignUp ? 'Sign Up' : 'Log In',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                  ),
+                                    const SizedBox(height: 12),
+                                    ElevatedButton.icon(
+                                      onPressed: () async {
+                                        setState(() { _errorMessage = null; });
+                                        // Standard guest fallback simulation in provider
+                                        bool success = await sermonProvider.signUp(
+                                          "guest_${DateTime.now().millisecondsSinceEpoch}@sermon.com",
+                                          "guest12345",
+                                          "Alex Johnson",
+                                        );
+                                        if (success && mounted) {
+                                          Navigator.pushReplacementNamed(context, '/navigation');
+                                        } else {
+                                          setState(() { _errorMessage = "게스트 로그인 실패. 연결 상태를 확인하세요."; });
+                                        }
+                                      },
+                                      icon: const Icon(Icons.flash_on_rounded, size: 16),
+                                      label: const Text('비밀번호 없이 게스트 둘러보기'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFFEBF2FF),
+                                        foregroundColor: const Color(0xFF2F69F8),
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          side: const BorderSide(color: Color(0xFFC7D9FF), width: 1.5),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                         ],
                       ),
