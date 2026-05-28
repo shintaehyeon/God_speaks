@@ -13,35 +13,53 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
   bool _showFlowSummary = false;
   final ScrollController _timelineScrollController = ScrollController();
   final ScrollController _textScrollController = ScrollController();
+  SermonProvider? _sermonProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final newProvider = Provider.of<SermonProvider>(context);
+    if (_sermonProvider != newProvider) {
+      _sermonProvider?.removeListener(_onProviderUpdated);
+      _sermonProvider = newProvider;
+      _sermonProvider?.addListener(_onProviderUpdated);
+    }
+  }
 
   @override
   void dispose() {
+    _sermonProvider?.removeListener(_onProviderUpdated);
     _timelineScrollController.dispose();
     _textScrollController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final sermonProvider = Provider.of<SermonProvider>(context);
-
+  void _onProviderUpdated() {
+    if (!mounted) return;
+    
     // Auto-scroll to the bottom of both sections when content updates
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       if (_textScrollController.hasClients) {
         _textScrollController.animateTo(
           _textScrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
       }
       if (_timelineScrollController.hasClients) {
         _timelineScrollController.animateTo(
           _timelineScrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
       }
     });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sermonProvider = Provider.of<SermonProvider>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),

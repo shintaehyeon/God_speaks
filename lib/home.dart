@@ -37,25 +37,40 @@ class HomePage extends StatelessWidget {
         ),
         actions: [
           // Language selector chip
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: const [
-                Text(
-                  '한국어 ➔ 🇺🇸 English',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2F69F8),
-                  ),
+          GestureDetector(
+            onTap: () {
+              sermonProvider.toggleLanguageDirection();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(sermonProvider.isEnglishToKorean
+                      ? '번역 방향: English ➔ 한국어 변경됨'
+                      : '번역 방향: 한국어 ➔ English 변경됨'),
+                  duration: const Duration(seconds: 1),
                 ),
-              ],
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    sermonProvider.isEnglishToKorean ? '🇺🇸 English ➔ 🇰🇷 한국어' : '한국어 ➔ 🇺🇸 English',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2F69F8),
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
         ],

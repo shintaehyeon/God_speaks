@@ -31,10 +31,11 @@ class _SummariesPageState extends State<SummariesPage> {
       return matchesFilter && matchesSearch;
     }).toList();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.menu_rounded),
@@ -80,7 +81,7 @@ class _SummariesPageState extends State<SummariesPage> {
         children: [
           // 1. Search Bar
           Container(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: TextField(
               onChanged: (val) {
@@ -93,7 +94,7 @@ class _SummariesPageState extends State<SummariesPage> {
                 hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
                 prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 20),
                 filled: true,
-                fillColor: const Color(0xFFF8F9FB),
+                fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8F9FB),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -105,7 +106,7 @@ class _SummariesPageState extends State<SummariesPage> {
 
           // 2. Horizontal Filter Categories
           Container(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             height: 52,
             child: ListView(
               scrollDirection: Axis.horizontal,
@@ -121,7 +122,7 @@ class _SummariesPageState extends State<SummariesPage> {
             ),
           ),
           
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          Divider(height: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
 
           // 3. Summaries Timeline / Card List
           Expanded(
@@ -163,6 +164,7 @@ class _SummariesPageState extends State<SummariesPage> {
 
   Widget _buildFilterChip(String name, {bool hasArrow = false, bool hasCalendar = false}) {
     final isSelected = _selectedFilter == name;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -174,7 +176,9 @@ class _SummariesPageState extends State<SummariesPage> {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2F69F8) : const Color(0xFFF1F5F9),
+          color: isSelected
+              ? const Color(0xFF2F69F8)
+              : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -193,7 +197,9 @@ class _SummariesPageState extends State<SummariesPage> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               ),
             ),
             if (hasArrow) ...[
@@ -211,12 +217,16 @@ class _SummariesPageState extends State<SummariesPage> {
   }
 
   Widget _buildSermonCard(SermonSummary s, bool isExpanded) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+          width: 1.5,
+        ),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -253,10 +263,10 @@ class _SummariesPageState extends State<SummariesPage> {
                   const SizedBox(width: 6),
                   Text(
                     s.category,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF64748B),
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -264,10 +274,10 @@ class _SummariesPageState extends State<SummariesPage> {
               const SizedBox(height: 6),
               Text(
                 s.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                  color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
                 ),
               ),
             ],
@@ -287,7 +297,7 @@ class _SummariesPageState extends State<SummariesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Divider(color: Color(0xFFF1F5F9), height: 20),
+                  Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9), height: 20),
                   
                   // Bullet Points Summaries
                   ...s.bulletPoints.map((pt) {
@@ -314,17 +324,17 @@ class _SummariesPageState extends State<SummariesPage> {
                                   if (isBoldKey) ...[
                                     TextSpan(
                                       text: '${pt.split(':')[0]}:',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1E293B),
+                                        color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
                                         fontSize: 13,
                                         fontFamily: 'Inter',
                                       ),
                                     ),
                                     TextSpan(
                                       text: pt.substring(pt.indexOf(':')),
-                                      style: const TextStyle(
-                                        color: Color(0xFF475569),
+                                      style: TextStyle(
+                                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                                         fontSize: 13,
                                         height: 1.4,
                                         fontFamily: 'Inter',
@@ -333,8 +343,8 @@ class _SummariesPageState extends State<SummariesPage> {
                                   ] else
                                     TextSpan(
                                       text: pt,
-                                      style: const TextStyle(
-                                        color: Color(0xFF475569),
+                                      style: TextStyle(
+                                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                                         fontSize: 13,
                                         height: 1.4,
                                         fontFamily: 'Inter',

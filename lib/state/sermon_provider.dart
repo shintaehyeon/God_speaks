@@ -21,6 +21,8 @@ class SermonProvider extends ChangeNotifier {
   // Real-time AI Configuration
   bool _useRealAI = false;
   bool get useRealAI => _useRealAI;
+  bool _isEnglishToKorean = false;
+  bool get isEnglishToKorean => _isEnglishToKorean;
   
   // Advanced AI and Speech Engines
   stt.SpeechToText _speech = stt.SpeechToText();
@@ -174,6 +176,12 @@ class SermonProvider extends ChangeNotifier {
   }
 
   // 2. Real-time Live Translation Session Controls
+  void toggleLanguageDirection() {
+    _isEnglishToKorean = !_isEnglishToKorean;
+    _translationLanguage = _isEnglishToKorean ? "Korean" : "English";
+    notifyListeners();
+  }
+
   void setLocation(String loc) {
     _selectedLocation = loc;
     notifyListeners();
@@ -343,10 +351,12 @@ class SermonProvider extends ChangeNotifier {
         if (result.recognizedWords.isNotEmpty) {
           String newWords = result.recognizedWords;
           
-          // Translate to English in real-time using super-fast Gemini AI
+          // Translate in real-time using super-fast Gemini AI
           if (_geminiModel != null) {
             try {
-              final translationPrompt = "You are a professional sermon translator. Translate the following Korean spoken sentence into natural, graceful, and holy English for a sermon transcription. Do not include any explanations, just provide the direct English translation. Sentence: \"$newWords\"";
+              final translationPrompt = _isEnglishToKorean
+                  ? "You are a professional sermon translator. Translate the following English spoken sentence into natural, graceful, and holy Korean for a sermon transcription. Do not include any explanations, just provide the direct Korean translation. Sentence: \"$newWords\""
+                  : "You are a professional sermon translator. Translate the following Korean spoken sentence into natural, graceful, and holy English for a sermon transcription. Do not include any explanations, just provide the direct English translation. Sentence: \"$newWords\"";
               final response = await _geminiModel!.generateContent([Content.text(translationPrompt)]);
               if (response.text != null && _isRecording) {
                 String translated = response.text!.trim();
@@ -371,7 +381,7 @@ class SermonProvider extends ChangeNotifier {
               _sermonFlowSteps.add(SermonFlowStep(
                 time: "LIVE CAPTURE",
                 type: "scripture",
-                title: "실시간 성경 감지 (Scripture Detected)",
+                title: _isEnglishToKorean ? "실시간 성경 감지" : "실시간 성경 감지 (Scripture Detected)",
                 description: "\"${newWords.length > 30 ? newWords.substring(0, 30) + '...' : newWords}\"",
               ));
             }
@@ -379,7 +389,7 @@ class SermonProvider extends ChangeNotifier {
           notifyListeners();
         }
       },
-      localeId: 'ko_KR', // Restrict speech recognition to Korean as requested
+      localeId: _isEnglishToKorean ? 'en_US' : 'ko_KR',
     );
   }
 
@@ -406,7 +416,9 @@ class SermonProvider extends ChangeNotifier {
     // Save actual text to database using Gemini AI summary if enabled and text exists
     if (_accumulatedKoreanText.isNotEmpty && _geminiModel != null) {
       try {
-        final prompt = "다음은 오늘 나눈 설교 번역 텍스트입니다. 이 설교 요약본을 만들어 주세요. 제목, 핵심 3줄 요약, 중심 성경 구절을 포함해야 합니다. 형식은 한국어로 해주세요. 텍스트: $_accumulatedKoreanText";
+        final prompt = _isEnglishToKorean
+            ? "다음은 영어에서 한국어로 번역된 설교 텍스트입니다. 이 설교 요약본을 한국어로 만들어 주세요. 제목, 핵심 3줄 요약, 중심 성경 구절을 포함해야 합니다. 형식은 반드시 한국어로 작성해 주세요. 텍스트: $_accumulatedKoreanText"
+            : "다음은 한국어에서 영어로 번역된 설교 텍스트입니다. 이 설교 요약본을 만들어 주세요. 제목, 핵심 3줄 요약, 중심 성경 구절을 포함해야 합니다. 형식은 반드시 한국어로 작성해 주세요. 텍스트: $_accumulatedKoreanText";
         final response = await _geminiModel!.generateContent([Content.text(prompt)]);
         if (response.text != null) {
           // Parse and add summary to Firestore!
