@@ -103,6 +103,7 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
     }
 
     return ListView.builder(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.all(16),
       itemCount: items.length,
       itemBuilder: (context, index) {

@@ -140,6 +140,7 @@ class _SummariesPageState extends State<SummariesPage> {
                     ),
                   )
                 : ListView.builder(
+                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredList.length,
                     itemBuilder: (context, index) {

@@ -11,10 +11,37 @@ class LiveTranslationPage extends StatefulWidget {
 
 class _LiveTranslationPageState extends State<LiveTranslationPage> {
   bool _showFlowSummary = false;
+  final ScrollController _timelineScrollController = ScrollController();
+  final ScrollController _textScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _timelineScrollController.dispose();
+    _textScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final sermonProvider = Provider.of<SermonProvider>(context);
+
+    // Auto-scroll to the bottom of both sections when content updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_textScrollController.hasClients) {
+        _textScrollController.animateTo(
+          _textScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+      if (_timelineScrollController.hasClients) {
+        _timelineScrollController.animateTo(
+          _timelineScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
@@ -73,11 +100,16 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
           // 1. Live Sermon Flow Timeline (Top Half)
           Expanded(
             flex: 11,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Scrollbar(
+              controller: _timelineScrollController,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: _timelineScrollController,
+                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
@@ -193,6 +225,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
               ),
             ),
           ),
+        ),
 
           // 2. Real-time Sound Waves visualizer (Middle transition)
           if (sermonProvider.isRecording)
@@ -280,16 +313,22 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                       
                       // Streaming text field
                       Expanded(
-                        child: SingleChildScrollView(
-                          child: Text(
-                            sermonProvider.liveTranslationText.isEmpty
-                                ? "Waiting for sermon to begin..."
-                                : sermonProvider.liveTranslationText,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF1E293B),
-                              height: 1.5,
+                        child: Scrollbar(
+                          controller: _textScrollController,
+                          thumbVisibility: true,
+                          child: SingleChildScrollView(
+                            controller: _textScrollController,
+                            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                            child: Text(
+                              sermonProvider.liveTranslationText.isEmpty
+                                  ? "Waiting for sermon to begin..."
+                                  : sermonProvider.liveTranslationText,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF1E293B),
+                                height: 1.5,
+                              ),
                             ),
                           ),
                         ),
