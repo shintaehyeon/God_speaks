@@ -8,7 +8,6 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sermonProvider = Provider.of<SermonProvider>(context);
-    final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
@@ -180,6 +179,15 @@ class SettingsPage extends StatelessWidget {
                     sermonProvider.pushNotifications,
                     (val) {
                       sermonProvider.updateUserPreference(pushNotifications: val);
+                    },
+                  ),
+                  const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  _buildPreferenceToggleRow(
+                    Icons.psychology_outlined,
+                    '실시간 AI 연동 모드 (Gemini & STT)',
+                    sermonProvider.useRealAI,
+                    (val) {
+                      sermonProvider.toggleRealAI(val);
                     },
                   ),
                   const Divider(height: 1, color: Color(0xFFF1F5F9)),

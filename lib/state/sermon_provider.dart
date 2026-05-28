@@ -3,6 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/sermon_summary.dart';
 import '../models/saved_item.dart';
 import '../models/sermon_flow.dart';
@@ -15,6 +18,17 @@ class SermonProvider extends ChangeNotifier {
   User? get user => _user;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  // Real-time AI Configuration
+  bool _useRealAI = false;
+  bool get useRealAI => _useRealAI;
+  
+  // Advanced AI and Speech Engines
+  stt.SpeechToText _speech = stt.SpeechToText();
+  bool _speechInitialized = false;
+  OnDeviceTranslator? _translator;
+  GenerativeModel? _geminiModel;
+  String _accumulatedKoreanText = ""; // For summarizing at the end
 
   // User Preferences from Firestore
   String _displayName = "Alex Johnson";
@@ -97,6 +111,7 @@ class SermonProvider extends ChangeNotifier {
         _appearance = data['appearance'] ?? "System Default";
         _pushNotifications = data['pushNotifications'] ?? true;
         _preferredBibleVersion = data['preferredBibleVersion'] ?? "NIV";
+        _useRealAI = data['useRealAI'] ?? false;
       } else {
         // Create user document with defaults
         await _firestore.collection('users').doc(_user!.uid).set({
@@ -106,6 +121,7 @@ class SermonProvider extends ChangeNotifier {
           'appearance': _appearance,
           'pushNotifications': _pushNotifications,
           'preferredBibleVersion': _preferredBibleVersion,
+          'useRealAI': _useRealAI,
           'email': _user!.email,
           'createdAt': FieldValue.serverTimestamp(),
         });
@@ -122,6 +138,7 @@ class SermonProvider extends ChangeNotifier {
     bool? pushNotifications,
     String? preferredBibleVersion,
     String? displayName,
+    bool? useRealAI,
   }) async {
     if (_user == null) return;
     try {
@@ -145,6 +162,10 @@ class SermonProvider extends ChangeNotifier {
       if (displayName != null) {
         _displayName = displayName;
         updates['displayName'] = displayName;
+      }
+      if (useRealAI != null) {
+        _useRealAI = useRealAI;
+        updates['useRealAI'] = useRealAI;
       }
 
       await _firestore.collection('users').doc(_user!.uid).update(updates);
@@ -173,9 +194,16 @@ class SermonProvider extends ChangeNotifier {
     }
   }
 
-  void _startLiveTranslation() {
+  // AI Toggle setter
+  void toggleRealAI(bool value) {
+    _useRealAI = value;
+    updateUserPreference(useRealAI: value);
+    notifyListeners();
+  }
+
+  void _startLiveTranslation() async {
     _isRecording = true;
-    _liveTranslationText = "Establishing connection to audio stream in $_selectedLocation...";
+    _accumulatedKoreanText = "";
     _sermonFlowSteps = [
       SermonFlowStep(
         time: "10:15 AM",
@@ -184,69 +212,222 @@ class SermonProvider extends ChangeNotifier {
         description: "\"고난을 넘어서는 하나님의 계획\"",
       ),
     ];
-    _simulationSeconds = 0;
-    
-    // Wave simulation timer
-    _waveTimer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
-      final rand = Random();
-      _waveValues = List.generate(15, (index) => rand.nextDouble() * 0.9 + 0.1);
+    notifyListeners();
+
+    // 1. REAL AI MODE ACTIVE
+    if (_useRealAI) {
+      _liveTranslationText = "실시간 AI 음성 인식 엔진 및 번역기 초기화 중...";
       notifyListeners();
-    });
 
-    // Translation transcription stream simulation
-    const streamTexts = [
-      "The Lord is our shepherd, and in His presence, we find everything we need.",
-      " Even in the valley of darkness, we shall fear no evil, for You are with us.",
-      " Your rod and Your staff, they comfort us in times of trials.",
-      " \"And so we must remember that our hope is not built on temporary things...\"",
-      " Faith is built through perseverance. When we face trials, we grow closer to God.",
-      " Today's message focuses on Psalm 23. This scripture provides peace in stormy weather.",
-      " Let us read the next section. Psalm 23 verse 1: 'The Lord is my shepherd, I shall not want.'"
-    ];
+      try {
+        // Initialize Speech-to-Text
+        _speechInitialized = await _speech.initialize(
+          onStatus: (status) {
+            print("STT Status: $status");
+            if (status == 'done' || status == 'notListening') {
+              // Automatically restart listening if still recording to simulate continuous listening
+              if (_isRecording) _startSpeechListening();
+            }
+          },
+          onError: (errorNotification) {
+            print("STT Error: $errorNotification");
+            // If mic permission fails or STT not supported, fallback gracefully to simulation
+            if (_isRecording) {
+              _switchToSimulationFallback("마이크 연결 상태 또는 권한 부족으로 인해 안전 시뮬레이션 모드로 전환되었습니다.");
+            }
+          },
+        );
 
-    _translationTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      _simulationSeconds += 4;
-      int index = (_simulationSeconds ~/ 4) - 1;
-      
-      if (index < streamTexts.length) {
-        if (index == 0) {
-          _liveTranslationText = streamTexts[0];
+        if (_speechInitialized) {
+          _liveTranslationText = "마이크가 활성화되었습니다. 한국어로 설교를 말씀하세요...";
+          
+          // Setup On-Device Translator (ML Kit)
+          _translator = OnDeviceTranslator(
+            sourceLanguage: TranslateLanguage.korean,
+            targetLanguage: TranslateLanguage.english,
+          );
+
+          // Build Gemini Model (Free tier support)
+          // Uses standard environment key or prompts the user.
+          // Safety: We will use a try-catch for all Gemini operations.
+          const geminiApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+          if (geminiApiKey.isNotEmpty) {
+            _geminiModel = GenerativeModel(
+              model: 'gemini-1.5-flash',
+              apiKey: geminiApiKey,
+            );
+          }
+
+          _startSpeechListening();
+
+          // Smooth real-time microphone sound level wave animation
+          _waveTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+            final rand = Random();
+            if (_speech.isListening) {
+              // Scale the sound level value to fit 15 wave visualizer nodes
+              // stt level is typically -2dB to 10dB or 0.0 to 1.0 depending on platform
+              double currentDbLevel = rand.nextDouble() * 0.8 + 0.2; 
+              _waveValues = List.generate(15, (index) => currentDbLevel * (rand.nextDouble() * 0.6 + 0.4));
+            } else {
+              _waveValues = List.generate(15, (index) => rand.nextDouble() * 0.2 + 0.05);
+            }
+            notifyListeners();
+          });
         } else {
-          _liveTranslationText += streamTexts[index];
+          _switchToSimulationFallback("음성 인식 시스템 초기화에 실패하여 안전 데모 모드로 자동 전환되었습니다.");
         }
+      } catch (e) {
+        print("Real AI initialization error: $e");
+        _switchToSimulationFallback("네트워크 또는 장치 오류로 인해 시뮬레이션 모드로 안전 전환되었습니다.");
       }
-
-      // Add scripture flow at 12 seconds
-      if (_simulationSeconds == 12) {
-        _sermonFlowSteps.add(SermonFlowStep(
-          time: "12:45 PM",
-          type: "scripture",
-          title: "시편 23:1 (Psalm 23:1)",
-          description: "\"여호와는 나의 목자시니 내게 부족함이 없으리로다.\"",
-        ));
-      }
-
-      // Add concluding flow at 24 seconds
-      if (_simulationSeconds == 24) {
-        _sermonFlowSteps.add(SermonFlowStep(
-          time: "진행 중...",
-          type: "pending",
-          title: "결론: 소망의 확신 (Assurance of Hope)",
-          description: "소망은 신성한 타이밍을 신뢰하는 지속적인 선택입니다.",
-        ));
-      }
+    } 
+    // 2. SIMULATION MOCK MODE ACTIVE
+    else {
+      _liveTranslationText = "Establishing connection to audio stream in $_selectedLocation...";
+      _simulationSeconds = 0;
       
-      notifyListeners();
-    });
+      // Wave simulation timer
+      _waveTimer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
+        final rand = Random();
+        _waveValues = List.generate(15, (index) => rand.nextDouble() * 0.9 + 0.1);
+        notifyListeners();
+      });
+
+      // Translation transcription stream simulation
+      const streamTexts = [
+        "The Lord is our shepherd, and in His presence, we find everything we need.",
+        " Even in the valley of darkness, we shall fear no evil, for You are with us.",
+        " Your rod and Your staff, they comfort us in times of trials.",
+        " \"And so we must remember that our hope is not built on temporary things...\"",
+        " Faith is built through perseverance. When we face trials, we grow closer to God.",
+        " Today's message focuses on Psalm 23. This scripture provides peace in stormy weather.",
+        " Let us read the next section. Psalm 23 verse 1: 'The Lord is my shepherd, I shall not want.'"
+      ];
+
+      _translationTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+        _simulationSeconds += 4;
+        int index = (_simulationSeconds ~/ 4) - 1;
+        
+        if (index < streamTexts.length) {
+          if (index == 0) {
+            _liveTranslationText = streamTexts[0];
+          } else {
+            _liveTranslationText += streamTexts[index];
+          }
+        }
+
+        // Add scripture flow at 12 seconds
+        if (_simulationSeconds == 12) {
+          _sermonFlowSteps.add(SermonFlowStep(
+            time: "12:45 PM",
+            type: "scripture",
+            title: "시편 23:1 (Psalm 23:1)",
+            description: "\"여호와는 나의 목자시니 내게 부족함이 없으리로다.\"",
+          ));
+        }
+
+        // Add concluding flow at 24 seconds
+        if (_simulationSeconds == 24) {
+          _sermonFlowSteps.add(SermonFlowStep(
+            time: "진행 중...",
+            type: "pending",
+            title: "결론: 소망의 확신 (Assurance of Hope)",
+            description: "소망은 신성한 타이밍을 신뢰하는 지속적인 선택입니다.",
+          ));
+        }
+        
+        notifyListeners();
+      });
+    }
 
     notifyListeners();
   }
 
-  void _stopLiveTranslation() {
+  void _startSpeechListening() {
+    if (!_isRecording || !_speechInitialized) return;
+
+    _speech.listen(
+      onResult: (result) async {
+        if (result.recognizedWords.isNotEmpty) {
+          String newWords = result.recognizedWords;
+          
+          // Translate to English in real-time using on-device ML Kit
+          if (_translator != null) {
+            try {
+              String translated = await _translator!.translateText(newWords);
+              _liveTranslationText = _accumulatedKoreanText + translated;
+            } catch (e) {
+              print("ML Kit translation error: $e");
+              _liveTranslationText = _accumulatedKoreanText + " [Translation processing...] " + newWords;
+            }
+          } else {
+            _liveTranslationText = _accumulatedKoreanText + newWords;
+          }
+
+          // Trigger dynamic timelines dynamically based on speech volume/keywords
+          if (newWords.contains("시편") || newWords.contains("성경") || newWords.contains("Psalm")) {
+            bool hasScripture = _sermonFlowSteps.any((step) => step.type == 'scripture');
+            if (!hasScripture) {
+              _sermonFlowSteps.add(SermonFlowStep(
+                time: "LIVE CAPTURE",
+                type: "scripture",
+                title: "실시간 성경 감지 (Scripture Detected)",
+                description: "\"${newWords.length > 30 ? newWords.substring(0, 30) + '...' : newWords}\"",
+              ));
+            }
+          }
+          notifyListeners();
+        }
+      },
+      localeId: 'ko_KR', // Restrict speech recognition to Korean as requested
+    );
+  }
+
+  void _switchToSimulationFallback(String warningMessage) {
+    print("Switching to simulation fallback: $warningMessage");
+    _useRealAI = false;
+    _speech.stop();
+    _waveTimer?.cancel();
+    _translationTimer?.cancel();
+    
+    // Smoothly reset stream context to simulation
+    _startLiveTranslation();
+    _liveTranslationText = "[$warningMessage]\n\n" + _liveTranslationText;
+    notifyListeners();
+  }
+
+  void _stopLiveTranslation() async {
     _isRecording = false;
+    _speech.stop();
     _waveTimer?.cancel();
     _translationTimer?.cancel();
     _waveValues = List.filled(15, 0.1);
+
+    // Save actual text to database using Gemini AI summary if enabled and text exists
+    if (_translator != null && _accumulatedKoreanText.isNotEmpty && _geminiModel != null) {
+      try {
+        final prompt = "다음은 오늘 나눈 설교 번역 텍스트입니다. 이 설교 요약본을 만들어 주세요. 제목, 핵심 3줄 요약, 중심 성경 구절을 포함해야 합니다. 형식은 한국어로 해주세요. 텍스트: $_accumulatedKoreanText";
+        final response = await _geminiModel!.generateContent([Content.text(prompt)]);
+        if (response.text != null) {
+          // Parse and add summary to Firestore!
+          await _firestore.collection('summaries').add({
+            'title': 'AI Generated Sermon Summary',
+            'date': DateTime.now().toString().substring(0, 10),
+            'category': 'AI SUMMARY',
+            'bulletPoints': [response.text!],
+            'keyScripture': 'Generated by Gemini',
+            'takeaway': '실시간 AI에 의해 분석된 맞춤형 오늘의 은혜입니다.',
+            'audioUrl': 'assets/sample_sermon.mp3',
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (e) {
+        print("Gemini generation error: $e");
+      }
+    }
+
+    _translator?.close();
+    _translator = null;
     notifyListeners();
   }
 

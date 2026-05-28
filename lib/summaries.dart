@@ -18,7 +18,6 @@ class _SummariesPageState extends State<SummariesPage> {
   @override
   Widget build(BuildContext context) {
     final sermonProvider = Provider.of<SermonProvider>(context);
-    final theme = Theme.of(context);
 
     // Filter summaries based on category and search query
     List<SermonSummary> filteredList = sermonProvider.summaries.where((s) {
@@ -303,7 +302,7 @@ class _SummariesPageState extends State<SummariesPage> {
                                 children: [
                                   if (isBoldKey) ...[
                                     TextSpan(
-                                      text: pt.split(':')[0] + ":",
+                                      text: '${pt.split(':')[0]}:',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Color(0xFF1E293B),
@@ -337,7 +336,7 @@ class _SummariesPageState extends State<SummariesPage> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
                   
                   const SizedBox(height: 8),
 
