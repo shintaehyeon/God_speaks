@@ -144,10 +144,10 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                                           ? const Color(0xFF2F69F8).withOpacity(0.3)
                                           : const Color(0xFFF1F5F9),
                                       width: 1.5,
+                                      style: isLast && step.type == 'pending'
+                                          ? BorderStyle.solid
+                                          : BorderStyle.none,
                                     ),
-                                    style: isLast && step.type == 'pending'
-                                        ? BorderStyle.solid
-                                        : BorderStyle.none,
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,

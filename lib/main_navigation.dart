@@ -52,7 +52,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           ),
           unselectedLabelStyle: const TextStyle(
             fontSize: 12,
-            fontWeight: FontWeight.medium,
+            fontWeight: FontWeight.w500,
             fontFamily: 'Inter',
           ),
           elevation: 0,

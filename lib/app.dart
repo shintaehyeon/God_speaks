@@ -32,7 +32,7 @@ class SermonTranslatorApp extends StatelessWidget {
               secondary: const Color(0xFFEBF2FF),
               background: const Color(0xFFF8F9FB),
             ),
-            cardTheme: const CardTheme(
+            cardTheme: const CardThemeData(
               color: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
