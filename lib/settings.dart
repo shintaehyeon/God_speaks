@@ -46,9 +46,33 @@ class SettingsPage extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 54,
-                    backgroundImage: AssetImage('assets/profile.png'),
+                  Container(
+                    width: 108,
+                    height: 108,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF3B82F6),
+                          Color(0xFF2F69F8),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF2F69F8).withOpacity(0.3),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        )
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.add_rounded, // Sleek Minimal Cross Emblem
+                      size: 60,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -223,7 +247,7 @@ class SettingsPage extends StatelessWidget {
                 textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 120), // Premium spacer to avoid bottom navigation overlay
           ],
         ),
       ),

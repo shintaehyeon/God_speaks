@@ -58,9 +58,19 @@ class _SummariesPageState extends State<SummariesPage> {
                   const SnackBar(content: Text('Swipe to settings tab to view profile'), duration: Duration(seconds: 1)),
                 );
               },
-              child: const CircleAvatar(
-                radius: 16,
-                backgroundImage: AssetImage('assets/profile.png'),
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFEBF2FF),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.add_rounded,
+                  size: 18,
+                  color: Color(0xFF2F69F8),
+                ),
               ),
             ),
           )
