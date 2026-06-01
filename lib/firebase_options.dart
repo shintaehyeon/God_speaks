@@ -41,49 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAW7ZU0YvR3BefV5RoVsK6-H7AtakUwNQw',
-    appId: '1:850795189571:web:6cf63cb1ec9d62f8a70bf6',
-    messagingSenderId: '850795189571',
-    projectId: 'mobileapp-final-22101046',
-    authDomain: 'mobileapp-final-22101046.firebaseapp.com',
-    storageBucket: 'mobileapp-final-22101046.firebasestorage.app',
-    measurementId: 'G-RP0QMKSMS0',
+    apiKey: 'AIzaSyAWIi-SWYk3r5xX14aSw6Uh_G-2QUqygWM',
+    appId: '1:241632718216:web:5ea8e181c46d83ef635e3d',
+    messagingSenderId: '241632718216',
+    projectId: 'god-speak-ai',
+    authDomain: 'god-speak-ai.firebaseapp.com',
+    storageBucket: 'god-speak-ai.firebasestorage.app',
+    measurementId: 'G-N01ZWWFPES',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCoVq5WubFiCOoYBLjQp_MAMctPT7Dc6-w',
-    appId: '1:850795189571:android:a50750d0edd8907fa70bf6',
-    messagingSenderId: '850795189571',
-    projectId: 'mobileapp-final-22101046',
-    storageBucket: 'mobileapp-final-22101046.firebasestorage.app',
+    apiKey: 'AIzaSyCG3fh2O2nnk1sB1_qL8eBc91miqDGj420',
+    appId: '1:241632718216:android:f75aa23a9b1c0b11635e3d',
+    messagingSenderId: '241632718216',
+    projectId: 'god-speak-ai',
+    storageBucket: 'god-speak-ai.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyA6LMuZRsZlbDH-vKvLPjGhq6c1z5nXOp4',
-    appId: '1:850795189571:ios:f3c7f8a81509c181a70bf6',
-    messagingSenderId: '850795189571',
-    projectId: 'mobileapp-final-22101046',
-    storageBucket: 'mobileapp-final-22101046.firebasestorage.app',
+    apiKey: 'AIzaSyAkb2J9_A0v2ujeNkvn8K8byaBeoLNhMzw',
+    appId: '1:241632718216:ios:71ed0f3ee6c09a3e635e3d',
+    messagingSenderId: '241632718216',
+    projectId: 'god-speak-ai',
+    storageBucket: 'god-speak-ai.firebasestorage.app',
     iosBundleId: 'com.example.mobileAppFinal',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyA6LMuZRsZlbDH-vKvLPjGhq6c1z5nXOp4',
-    appId: '1:850795189571:ios:f3c7f8a81509c181a70bf6',
-    messagingSenderId: '850795189571',
-    projectId: 'mobileapp-final-22101046',
-    storageBucket: 'mobileapp-final-22101046.firebasestorage.app',
+    apiKey: 'AIzaSyAkb2J9_A0v2ujeNkvn8K8byaBeoLNhMzw',
+    appId: '1:241632718216:ios:71ed0f3ee6c09a3e635e3d',
+    messagingSenderId: '241632718216',
+    projectId: 'god-speak-ai',
+    storageBucket: 'god-speak-ai.firebasestorage.app',
     iosBundleId: 'com.example.mobileAppFinal',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAW7ZU0YvR3BefV5RoVsK6-H7AtakUwNQw',
-    appId: '1:850795189571:web:fa0c338caab79034a70bf6',
-    messagingSenderId: '850795189571',
-    projectId: 'mobileapp-final-22101046',
-    authDomain: 'mobileapp-final-22101046.firebaseapp.com',
-    storageBucket: 'mobileapp-final-22101046.firebasestorage.app',
-    measurementId: 'G-2VMEX4XSH0',
+    apiKey: 'AIzaSyAWIi-SWYk3r5xX14aSw6Uh_G-2QUqygWM',
+    appId: '1:241632718216:web:433607dc0306e842635e3d',
+    messagingSenderId: '241632718216',
+    projectId: 'god-speak-ai',
+    authDomain: 'god-speak-ai.firebaseapp.com',
+    storageBucket: 'god-speak-ai.firebasestorage.app',
+    measurementId: 'G-ZN7FZ91JJ9',
   );
 
 }

@@ -413,6 +413,21 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
           ),
         ],
       ),
+      floatingActionButton: sermonProvider.isRecording
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                // Stop translation
+                sermonProvider.toggleRecording();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('🛑 실시간 번역 세션이 성공적으로 종료되어 인공지능 요약본이 생성되었습니다!')),
+                );
+                Navigator.pop(context); // Go back home
+              },
+              backgroundColor: const Color(0xFFEF4444),
+              icon: const Icon(Icons.stop_circle_rounded, color: Colors.white),
+              label: const Text('번역 종료 및 요약', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            )
+          : null,
     );
   }
 

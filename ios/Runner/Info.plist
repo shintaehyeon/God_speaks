@@ -70,5 +70,16 @@
 	<string>실시간 설교 음성 인식을 위해 마이크 권한이 필요합니다.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>음성 설교를 실시간 텍스트로 변환하기 위해 음성 인식 권한이 필요합니다.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.241632718216-71ed0f3ee6c09a3e635e3d</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

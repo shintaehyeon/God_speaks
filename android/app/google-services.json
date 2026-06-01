@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "850795189571",
-    "project_id": "mobileapp-final-22101046",
-    "storage_bucket": "mobileapp-final-22101046.firebasestorage.app"
+    "project_number": "241632718216",
+    "project_id": "god-speak-ai",
+    "storage_bucket": "god-speak-ai.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:850795189571:android:a50750d0edd8907fa70bf6",
+        "mobilesdk_app_id": "1:241632718216:android:f75aa23a9b1c0b11635e3d",
         "android_client_info": {
           "package_name": "com.example.mobile_app_final"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCoVq5WubFiCOoYBLjQp_MAMctPT7Dc6-w"
+          "current_key": "AIzaSyCG3fh2O2nnk1sB1_qL8eBc91miqDGj420"
         }
       ],
       "services": {
