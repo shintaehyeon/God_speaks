@@ -3,10 +3,10 @@ import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart
 import 'package:url_launcher/url_launcher.dart';
 
 class OpenSourcePage extends StatelessWidget {
-  const OpenSourcePage({Key? key}) : super(key: key);
+  const OpenSourcePage({super.key});
 
   static const String _introHtml = '''
-    <p><strong>Gods speak</strong>는 STT, 설교 요약 표시, 공유, 상태관리,
+    <p><strong>HISpeak</strong>는 STT, 설교 요약 표시, 공유, 상태관리,
     로그인/Firebase 연동을 Flutter 오픈소스 패키지와 공식 SDK를 조합해 구현했습니다.</p>
     <p>아래 목록은 기말 프로젝트에서 실제 기능에 연결된 패키지입니다.</p>
   ''';
@@ -141,7 +141,9 @@ class OpenSourcePage extends StatelessWidget {
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                color: isDark
+                    ? const Color(0xFF334155)
+                    : const Color(0xFFE2E8F0),
               ),
             ),
             child: Column(
@@ -171,7 +173,9 @@ class OpenSourcePage extends StatelessWidget {
                 HtmlWidget(
                   _introHtml,
                   textStyle: TextStyle(
-                    color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                    color: isDark
+                        ? const Color(0xFFCBD5E1)
+                        : const Color(0xFF475569),
                     fontSize: 13,
                     height: 1.45,
                   ),
@@ -209,18 +213,15 @@ class OpenSourcePage extends StatelessWidget {
     final didOpen = await launchUrl(uri, mode: LaunchMode.externalApplication);
 
     if (!didOpen && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('링크를 열 수 없습니다: $url')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('링크를 열 수 없습니다: $url')));
     }
   }
 }
 
 class _OpenSourcePackageTile extends StatelessWidget {
-  const _OpenSourcePackageTile({
-    required this.package,
-    required this.onOpen,
-  });
+  const _OpenSourcePackageTile({required this.package, required this.onOpen});
 
   final _OpenSourcePackage package;
   final VoidCallback onOpen;
@@ -264,7 +265,9 @@ class _OpenSourcePackageTile extends StatelessWidget {
                 Text(
                   package.name,
                   style: TextStyle(
-                    color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                    color: isDark
+                        ? const Color(0xFFF1F5F9)
+                        : const Color(0xFF1E293B),
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
                   ),
@@ -273,7 +276,9 @@ class _OpenSourcePackageTile extends StatelessWidget {
                 Text(
                   package.role,
                   style: TextStyle(
-                    color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                    color: isDark
+                        ? const Color(0xFFCBD5E1)
+                        : const Color(0xFF475569),
                     fontSize: 12,
                     height: 1.35,
                   ),

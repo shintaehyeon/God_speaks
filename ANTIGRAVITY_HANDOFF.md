@@ -4,6 +4,10 @@
 
 https://github.com/shintaehyeon/God_speaks
 
+App name: HISpeak
+
+Meaning: 그의 음성
+
 ## Run
 
 ```bash
@@ -36,7 +40,9 @@ The English Bible text is World English Bible via GetBible and is marked Public 
 
 ## Prompt For Antigravity
 
-Continue this Flutter project as a bilingual sermon companion app.
+Continue this Flutter project as HISpeak, a bilingual sermon companion app.
+
+Brand meaning: 그의 음성.
 
 The app already has an offline bilingual Bible reader using bundled Public Domain data:
 

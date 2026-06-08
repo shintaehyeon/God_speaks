@@ -456,7 +456,7 @@ class _SummariesPageState extends State<SummariesPage> {
                           if (isPremium) {
                             final shareText =
                                 """
-🌟 *Gods speak Sermon Summary Report* 🌟
+🌟 *HISpeak Sermon Summary Report* 🌟
 📅 Date: ${s.date}
 🏷️ Topic: ${s.category}
 ⛪ Title: ${s.title}
@@ -468,7 +468,7 @@ ${s.bulletPoints.map((pt) => "• $pt").join("\n")}
 🕊️ *Closing Takeaway:*
 ${s.takeaway}
 
-Generated dynamically by Gods speak.
+Generated dynamically by HISpeak.
 """;
                             // Copy to clipboard
                             Clipboard.setData(ClipboardData(text: shareText));
@@ -476,7 +476,7 @@ Generated dynamically by Gods speak.
                             SharePlus.instance.share(
                               ShareParams(
                                 text: shareText,
-                                subject: 'Gods speak Sermon Summary',
+                                subject: 'HISpeak Sermon Summary',
                               ),
                             );
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -551,7 +551,7 @@ Generated dynamically by Gods speak.
             children: const [
               Icon(Icons.stars_rounded, color: Color(0xFFF59E0B)),
               SizedBox(width: 8),
-              Text('Gods speak 프리미엄 👑'),
+              Text('HISpeak 프리미엄 👑'),
             ],
           ),
           content: const Text(
@@ -593,7 +593,7 @@ Generated dynamically by Gods speak.
       {
         "sender": "ai",
         "text":
-            "안녕하세요! 'Gods speak'입니다. '${s.title}' 설교에 대해 궁금한 점을 은혜롭게 해결해 드리겠습니다. 편하게 무엇이든 질문해 주세요! 🕊️",
+            "안녕하세요! 'HISpeak'입니다. '${s.title}' 설교에 대해 궁금한 점을 은혜롭게 해결해 드리겠습니다. 편하게 무엇이든 질문해 주세요! 🕊️",
       },
     ];
 

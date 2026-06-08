@@ -102,7 +102,7 @@ class _SplashPageState extends State<SplashPage>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Gods speak emblem
+                      // HISpeak emblem
                       Container(
                         width: 90,
                         height: 90,
@@ -128,7 +128,7 @@ class _SplashPageState extends State<SplashPage>
 
                       // App Logo Text
                       const Text(
-                        'Gods speak',
+                        'HISpeak',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w900,

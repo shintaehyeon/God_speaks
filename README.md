@@ -1,6 +1,9 @@
-# mobile_app_final
+# HISpeak
 
-A new Flutter project.
+그의 음성.
+
+A bilingual sermon companion app for live sermon translation, Bible reading,
+and sermon summaries.
 
 ## Getting Started
 

@@ -68,7 +68,11 @@ class _LoginPageState extends State<LoginPage> {
             onPressed: () => Navigator.pop(context),
             child: const Text(
               "확인",
-              style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2F69F8), fontSize: 15),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2F69F8),
+                fontSize: 15,
+              ),
             ),
           ),
         ],
@@ -83,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       body: FlutterLogin(
-        title: 'Gods speak',
+        title: 'HISpeak',
         logo: const AssetImage('assets/diamond.png'),
         onLogin: _authUser,
         onSignup: _signupUser,
@@ -112,7 +116,10 @@ class _LoginPageState extends State<LoginPage> {
             icon: FontAwesomeIcons.bolt,
             label: '게스트 원터치 시작',
             callback: () async {
-              final sermonProvider = Provider.of<SermonProvider>(context, listen: false);
+              final sermonProvider = Provider.of<SermonProvider>(
+                context,
+                listen: false,
+              );
               bool success = await sermonProvider.signUp(
                 "guest_${DateTime.now().millisecondsSinceEpoch}@sermon.com",
                 "guest12345",
@@ -161,7 +168,9 @@ class _LoginPageState extends State<LoginPage> {
           ),
           inputTheme: InputDecorationTheme(
             filled: true,
-            fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+            fillColor: isDark
+                ? const Color(0xFF0F172A)
+                : const Color(0xFFF1F5F9),
             contentPadding: const EdgeInsets.symmetric(vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

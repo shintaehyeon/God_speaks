@@ -115,7 +115,8 @@ class SermonProvider extends ChangeNotifier {
   void _initConnectivity() {
     // Check initial connection
     Connectivity().checkConnectivity().then((List<ConnectivityResult> results) {
-      bool offline = results.isEmpty || results.contains(ConnectivityResult.none);
+      bool offline =
+          results.isEmpty || results.contains(ConnectivityResult.none);
       if (_isOffline != offline) {
         _isOffline = offline;
         notifyListeners();
@@ -123,8 +124,11 @@ class SermonProvider extends ChangeNotifier {
     });
 
     // Listen to changes
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
-      bool offline = results.isEmpty || results.contains(ConnectivityResult.none);
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
+      bool offline =
+          results.isEmpty || results.contains(ConnectivityResult.none);
       if (_isOffline != offline) {
         _isOffline = offline;
         notifyListeners();
@@ -983,7 +987,7 @@ class SermonProvider extends ChangeNotifier {
 
     final prompt =
         """
-우리는 기독교 예배 설교 자막/요약 관리 서비스인 'Gods speak'입니다.
+우리는 기독교 예배 설교 자막/요약 관리 서비스인 'HISpeak'입니다.
 다음은 사용자가 들은 설교 요약 정보입니다:
 제목: $sermonTitle
 요약 내용: $sermonSummaryPoints

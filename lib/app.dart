@@ -8,14 +8,14 @@ import 'live_translation.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SermonTranslatorApp extends StatelessWidget {
-  const SermonTranslatorApp({Key? key}) : super(key: key);
+  const SermonTranslatorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<SermonProvider>(
       builder: (context, sermonProvider, _) {
         return MaterialApp(
-          title: 'Smart Sermon Translator',
+          title: 'HISpeak',
           debugShowCheckedModeBanner: false,
           initialRoute: '/splash',
           routes: {
@@ -30,7 +30,9 @@ class SermonTranslatorApp extends StatelessWidget {
             brightness: Brightness.light,
             textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
             primaryColor: const Color(0xFF2F69F8), // Sleek electric blue
-            scaffoldBackgroundColor: const Color(0xFFF8F9FB), // Modern clean off-white
+            scaffoldBackgroundColor: const Color(
+              0xFFF8F9FB,
+            ), // Modern clean off-white
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF2F69F8),
               primary: const Color(0xFF2F69F8),
@@ -64,7 +66,9 @@ class SermonTranslatorApp extends StatelessWidget {
             brightness: Brightness.dark,
             textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
             primaryColor: const Color(0xFF2F69F8),
-            scaffoldBackgroundColor: const Color(0xFF0F172A), // Premium Dark Slate/Navy
+            scaffoldBackgroundColor: const Color(
+              0xFF0F172A,
+            ), // Premium Dark Slate/Navy
             colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.dark,
               seedColor: const Color(0xFF2F69F8),
