@@ -85,6 +85,8 @@ flutter:
     - assets/diamond.png
     - assets/profile.png
     - assets/bible_verse.png
+    - assets/bibles/korean.json
+    - assets/bibles/web.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
+import 'bible_page.dart';
 import 'summaries.dart';
 import 'archive.dart';
 import 'settings.dart';
 
 class MainNavigationPage extends StatefulWidget {
-  const MainNavigationPage({Key? key}) : super(key: key);
+  const MainNavigationPage({super.key});
 
   @override
   State<MainNavigationPage> createState() => _MainNavigationPageState();
@@ -16,6 +17,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   final List<Widget> _pages = [
     const HomePage(),
+    const BiblePage(),
     const SummariesPage(),
     const ArchivePage(),
     const SettingsPage(),
@@ -24,15 +26,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Color(0xFFF1F5F9), width: 1.5),
-          ),
+          border: Border(top: BorderSide(color: Color(0xFFF1F5F9), width: 1.5)),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
@@ -67,6 +64,17 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                 child: Icon(Icons.home_rounded),
               ),
               label: '홈',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 4),
+                child: Icon(Icons.menu_book_outlined),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 4),
+                child: Icon(Icons.menu_book_rounded),
+              ),
+              label: '성경',
             ),
             BottomNavigationBarItem(
               icon: Padding(
