@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -23,12 +24,16 @@ class _SummariesPageState extends State<SummariesPage> {
 
     // Filter summaries based on category and search query
     List<SermonSummary> filteredList = sermonProvider.summaries.where((s) {
-      bool matchesFilter = _selectedFilter == "All Archive" ||
+      bool matchesFilter =
+          _selectedFilter == "All Archive" ||
           s.category.toUpperCase() == _selectedFilter.toUpperCase();
-      
-      bool matchesSearch = s.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+
+      bool matchesSearch =
+          s.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           s.keyScripture.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          s.bulletPoints.any((pt) => pt.toLowerCase().contains(_searchQuery.toLowerCase()));
+          s.bulletPoints.any(
+            (pt) => pt.toLowerCase().contains(_searchQuery.toLowerCase()),
+          );
 
       return matchesFilter && matchesSearch;
     }).toList();
@@ -43,7 +48,10 @@ class _SummariesPageState extends State<SummariesPage> {
           icon: const Icon(Icons.menu_rounded),
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Menu clicked (Prototype)'), duration: Duration(milliseconds: 500)),
+              const SnackBar(
+                content: Text('Menu clicked (Prototype)'),
+                duration: Duration(milliseconds: 500),
+              ),
             );
           },
         ),
@@ -58,7 +66,10 @@ class _SummariesPageState extends State<SummariesPage> {
               onTap: () {
                 // Focus profile setting page tab
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Swipe to settings tab to view profile'), duration: Duration(seconds: 1)),
+                  const SnackBar(
+                    content: Text('Swipe to settings tab to view profile'),
+                    duration: Duration(seconds: 1),
+                  ),
                 );
               },
               child: Container(
@@ -76,7 +87,7 @@ class _SummariesPageState extends State<SummariesPage> {
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
       body: Column(
@@ -93,10 +104,19 @@ class _SummariesPageState extends State<SummariesPage> {
               },
               decoration: InputDecoration(
                 hintText: 'Search by date, topic, or scripture',
-                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 20),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 13,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFF64748B),
+                  size: 20,
+                ),
                 filled: true,
-                fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8F9FB),
+                fillColor: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFF8F9FB),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -123,8 +143,11 @@ class _SummariesPageState extends State<SummariesPage> {
               ],
             ),
           ),
-          
-          Divider(height: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+
+          Divider(
+            height: 1,
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+          ),
 
           // 3. Summaries Timeline / Card List
           Expanded(
@@ -133,17 +156,26 @@ class _SummariesPageState extends State<SummariesPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
-                        Icon(Icons.feed_outlined, size: 48, color: Color(0xFFCBD5E1)),
+                        Icon(
+                          Icons.feed_outlined,
+                          size: 48,
+                          color: Color(0xFFCBD5E1),
+                        ),
                         SizedBox(height: 12),
                         Text(
                           'No summaries found',
-                          style: TextStyle(color: Color(0xFF94A3B8), fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Color(0xFF94A3B8),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
-                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredList.length,
                     itemBuilder: (context, index) {
@@ -164,7 +196,11 @@ class _SummariesPageState extends State<SummariesPage> {
     );
   }
 
-  Widget _buildFilterChip(String name, {bool hasArrow = false, bool hasCalendar = false}) {
+  Widget _buildFilterChip(
+    String name, {
+    bool hasArrow = false,
+    bool hasCalendar = false,
+  }) {
     final isSelected = _selectedFilter == name;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
@@ -201,7 +237,9 @@ class _SummariesPageState extends State<SummariesPage> {
                 fontWeight: FontWeight.bold,
                 color: isSelected
                     ? Colors.white
-                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    : (isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B)),
               ),
             ),
             if (hasArrow) ...[
@@ -211,7 +249,7 @@ class _SummariesPageState extends State<SummariesPage> {
                 size: 14,
                 color: isSelected ? Colors.white : const Color(0xFF64748B),
               ),
-            ]
+            ],
           ],
         ),
       ),
@@ -270,7 +308,9 @@ class _SummariesPageState extends State<SummariesPage> {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -281,7 +321,9 @@ class _SummariesPageState extends State<SummariesPage> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                  color: isDark
+                      ? const Color(0xFFF1F5F9)
+                      : const Color(0xFF1E293B),
                 ),
               ),
             ],
@@ -301,68 +343,37 @@ class _SummariesPageState extends State<SummariesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9), height: 20),
-                  
-                  // Bullet Points Summaries
-                  ...s.bulletPoints.map((pt) {
-                    bool isBoldKey = pt.startsWith("Key scripture:") || pt.startsWith("Closing takeaway:");
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(top: 6),
-                            width: 5,
-                            height: 5,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF2F69F8),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: RichText(
-                              text: TextSpan(
-                                children: [
-                                  if (isBoldKey) ...[
-                                    TextSpan(
-                                      text: '${pt.split(':')[0]}:',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
-                                        fontSize: 13,
-                                        fontFamily: 'Inter',
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: pt.substring(pt.indexOf(':')),
-                                      style: TextStyle(
-                                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
-                                        fontSize: 13,
-                                        height: 1.4,
-                                        fontFamily: 'Inter',
-                                      ),
-                                    ),
-                                  ] else
-                                    TextSpan(
-                                      text: pt,
-                                      style: TextStyle(
-                                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
-                                        fontSize: 13,
-                                        height: 1.4,
-                                        fontFamily: 'Inter',
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                  Divider(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFF1F5F9),
+                    height: 20,
+                  ),
+
+                  MarkdownBody(
+                    data: _summaryMarkdown(s.bulletPoints),
+                    styleSheet: MarkdownStyleSheet(
+                      p: TextStyle(
+                        color: isDark
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFF475569),
+                        fontSize: 13,
+                        height: 1.4,
                       ),
-                    );
-                  }),
-                  
+                      strong: TextStyle(
+                        color: isDark
+                            ? const Color(0xFFF1F5F9)
+                            : const Color(0xFF1E293B),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      listBullet: const TextStyle(
+                        color: Color(0xFF2F69F8),
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
                   const SizedBox(height: 8),
 
                   // Bottom Action Buttons
@@ -372,22 +383,33 @@ class _SummariesPageState extends State<SummariesPage> {
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Playing sermon audio... (Prototype)'),
+                              content: Text(
+                                'Playing sermon audio... (Prototype)',
+                              ),
                               duration: Duration(seconds: 1),
                             ),
                           );
                         },
-                        icon: const Icon(Icons.play_circle_fill_rounded, size: 16),
+                        icon: const Icon(
+                          Icons.play_circle_fill_rounded,
+                          size: 16,
+                        ),
                         label: const Text('Listen'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFEBF2FF),
                           foregroundColor: const Color(0xFF2F69F8),
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -401,27 +423,40 @@ class _SummariesPageState extends State<SummariesPage> {
                           }
                         },
                         icon: Icon(
-                          isPremium ? Icons.psychology_rounded : Icons.lock_rounded, 
-                          size: 16
+                          isPremium
+                              ? Icons.psychology_rounded
+                              : Icons.lock_rounded,
+                          size: 16,
                         ),
                         label: Text(isPremium ? 'AI 질문' : 'AI 질문 🔒'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isPremium ? const Color(0xFFEFF6FF) : const Color(0xFFFEF2F2),
-                          foregroundColor: isPremium ? const Color(0xFF2F69F8) : const Color(0xFFEF4444),
+                          backgroundColor: isPremium
+                              ? const Color(0xFFEFF6FF)
+                              : const Color(0xFFFEF2F2),
+                          foregroundColor: isPremium
+                              ? const Color(0xFF2F69F8)
+                              : const Color(0xFFEF4444),
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       OutlinedButton.icon(
                         onPressed: () {
                           if (isPremium) {
-                            final shareText = """
-🌟 *Solomon AI Sermon Summary Report* 🌟
+                            final shareText =
+                                """
+🌟 *Gods speak Sermon Summary Report* 🌟
 📅 Date: ${s.date}
 🏷️ Topic: ${s.category}
 ⛪ Title: ${s.title}
@@ -433,16 +468,22 @@ ${s.bulletPoints.map((pt) => "• $pt").join("\n")}
 🕊️ *Closing Takeaway:*
 ${s.takeaway}
 
-Generated dynamically by Solomon AI.
+Generated dynamically by Gods speak.
 """;
                             // Copy to clipboard
                             Clipboard.setData(ClipboardData(text: shareText));
-                            // Trigger native share sheet using share_plus!
-                            // ignore: deprecated_member_use
-                            Share.share(shareText, subject: 'Solomon AI Sermon Summary');
+                            // Trigger native share sheet using share_plus.
+                            SharePlus.instance.share(
+                              ShareParams(
+                                text: shareText,
+                                subject: 'Gods speak Sermon Summary',
+                              ),
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('📋 설교 요약본 리포트가 클립보드에 복사되고 공유 창이 열렸습니다!'),
+                                content: Text(
+                                  '📋 설교 요약본 리포트가 클립보드에 복사되고 공유 창이 열렸습니다!',
+                                ),
                                 duration: Duration(seconds: 2),
                               ),
                             );
@@ -451,21 +492,33 @@ Generated dynamically by Solomon AI.
                           }
                         },
                         icon: Icon(
-                          isPremium ? Icons.share_rounded : Icons.lock_rounded, 
+                          isPremium ? Icons.share_rounded : Icons.lock_rounded,
                           size: 14,
-                          color: isPremium ? const Color(0xFF64748B) : const Color(0xFFEF4444)
+                          color: isPremium
+                              ? const Color(0xFF64748B)
+                              : const Color(0xFFEF4444),
                         ),
                         label: Text(isPremium ? '공유' : '공유 🔒'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: isPremium ? const Color(0xFF64748B) : const Color(0xFFEF4444),
+                          foregroundColor: isPremium
+                              ? const Color(0xFF64748B)
+                              : const Color(0xFFEF4444),
                           side: BorderSide(
-                            color: isPremium ? const Color(0xFFCBD5E1) : const Color(0xFFFCA5A5)
+                            color: isPremium
+                                ? const Color(0xFFCBD5E1)
+                                : const Color(0xFFFCA5A5),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -479,6 +532,16 @@ Generated dynamically by Solomon AI.
     );
   }
 
+  String _summaryMarkdown(List<String> points) {
+    return points
+        .map((point) {
+          final trimmed = point.trim();
+          final escaped = trimmed.replaceAll('\n', '\n  ');
+          return '- $escaped';
+        })
+        .join('\n\n');
+  }
+
   void _showPremiumUpgradeDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -488,11 +551,11 @@ Generated dynamically by Solomon AI.
             children: const [
               Icon(Icons.stars_rounded, color: Color(0xFFF59E0B)),
               SizedBox(width: 8),
-              Text('솔로몬 프리미엄 👑'),
+              Text('Gods speak 프리미엄 👑'),
             ],
           ),
           content: const Text(
-            '무제한 실시간 AI 설교 질의응답 피드백, 아름다운 마크다운 설교 리포트 내보내기/공유 기능을 원하십니까?\n\n로그아웃 하신 뒤, "구글 계정으로 간편 시작" 소셜 로그인을 완료하시면 평생 무료로 즉시 잠금 해제됩니다!'
+            '무제한 실시간 AI 설교 질의응답 피드백, 아름다운 마크다운 설교 리포트 내보내기/공유 기능을 원하십니까?\n\n로그아웃 하신 뒤, "구글 계정으로 간편 시작" 소셜 로그인을 완료하시면 평생 무료로 즉시 잠금 해제됩니다!',
           ),
           actions: [
             TextButton(
@@ -503,7 +566,9 @@ Generated dynamically by Solomon AI.
               onPressed: () {
                 Navigator.pop(context); // Close dialog
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('설정(Settings) 탭으로 이동하여 로그아웃 후 다시 시도해 주세요!')),
+                  const SnackBar(
+                    content: Text('설정(Settings) 탭으로 이동하여 로그아웃 후 다시 시도해 주세요!'),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -518,13 +583,18 @@ Generated dynamically by Solomon AI.
     );
   }
 
-  void _showAIChatBottomSheet(BuildContext context, SermonSummary s, SermonProvider provider) {
+  void _showAIChatBottomSheet(
+    BuildContext context,
+    SermonSummary s,
+    SermonProvider provider,
+  ) {
     final TextEditingController questionController = TextEditingController();
     final List<Map<String, String>> chatMessages = [
       {
         "sender": "ai",
-        "text": "안녕하세요! '솔로몬 AI'입니다. '${s.title}' 설교에 대해 궁금한 점을 은혜롭게 해결해 드리겠습니다. 편하게 무엇이든 질문해 주세요! 🕊️"
-      }
+        "text":
+            "안녕하세요! 'Gods speak'입니다. '${s.title}' 설교에 대해 궁금한 점을 은혜롭게 해결해 드리겠습니다. 편하게 무엇이든 질문해 주세요! 🕊️",
+      },
     ];
 
     showModalBottomSheet(
@@ -544,7 +614,12 @@ Generated dynamically by Solomon AI.
                   topRight: Radius.circular(24),
                 ),
               ),
-              padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -560,7 +635,11 @@ Generated dynamically by Solomon AI.
                               color: Color(0xFFEBF2FF),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.psychology_rounded, color: Color(0xFF2F69F8), size: 20),
+                            child: const Icon(
+                              Icons.psychology_rounded,
+                              color: Color(0xFF2F69F8),
+                              size: 20,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Column(
@@ -568,25 +647,31 @@ Generated dynamically by Solomon AI.
                             children: [
                               const Text(
                                 '설교 AI 어시스턴트',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
                               ),
                               SizedBox(
                                 width: 180,
                                 child: Text(
                                   s.title,
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFF64748B),
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () => Navigator.pop(context),
-                      )
+                      ),
                     ],
                   ),
                   const Divider(height: 24, color: Color(0xFFF1F5F9)),
@@ -602,37 +687,54 @@ Generated dynamically by Solomon AI.
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: Row(
-                            mainAxisAlignment: isAI ? MainAxisAlignment.start : MainAxisAlignment.end,
+                            mainAxisAlignment: isAI
+                                ? MainAxisAlignment.start
+                                : MainAxisAlignment.end,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (isAI) ...[
                                 const CircleAvatar(
                                   radius: 14,
                                   backgroundColor: Color(0xFFEBF2FF),
-                                  child: Icon(Icons.psychology_rounded, size: 14, color: Color(0xFF2F69F8)),
+                                  child: Icon(
+                                    Icons.psychology_rounded,
+                                    size: 14,
+                                    color: Color(0xFF2F69F8),
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
                               ],
                               Flexible(
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isAI 
-                                        ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9))
+                                    color: isAI
+                                        ? (isDark
+                                              ? const Color(0xFF1E293B)
+                                              : const Color(0xFFF1F5F9))
                                         : const Color(0xFF2F69F8),
                                     borderRadius: BorderRadius.only(
                                       topLeft: const Radius.circular(16),
                                       topRight: const Radius.circular(16),
-                                      bottomLeft: isAI ? Radius.zero : const Radius.circular(16),
-                                      bottomRight: isAI ? const Radius.circular(16) : Radius.zero,
+                                      bottomLeft: isAI
+                                          ? Radius.zero
+                                          : const Radius.circular(16),
+                                      bottomRight: isAI
+                                          ? const Radius.circular(16)
+                                          : Radius.zero,
                                     ),
                                   ),
                                   child: Text(
                                     msg['text']!,
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: isAI 
-                                          ? (isDark ? const Color(0xFFF1F5F9) : const Color(0xFF334155))
+                                      color: isAI
+                                          ? (isDark
+                                                ? const Color(0xFFF1F5F9)
+                                                : const Color(0xFF334155))
                                           : Colors.white,
                                       height: 1.4,
                                     ),
@@ -644,7 +746,11 @@ Generated dynamically by Solomon AI.
                                 const CircleAvatar(
                                   radius: 14,
                                   backgroundColor: Color(0xFFE2E8F0),
-                                  child: Icon(Icons.person_rounded, size: 14, color: Color(0xFF64748B)),
+                                  child: Icon(
+                                    Icons.person_rounded,
+                                    size: 14,
+                                    color: Color(0xFF64748B),
+                                  ),
                                 ),
                               ],
                             ],
@@ -663,14 +769,22 @@ Generated dynamically by Solomon AI.
                           controller: questionController,
                           decoration: InputDecoration(
                             hintText: '설교 내용에 관해 궁금한 점을 적어보세요...',
-                            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                            hintStyle: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF94A3B8),
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)
+                                color: isDark
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFCBD5E1),
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                           ),
                           style: const TextStyle(fontSize: 13),
                         ),
@@ -688,28 +802,44 @@ Generated dynamically by Solomon AI.
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(
-                                icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                                icon: const Icon(
+                                  Icons.send_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                                 onPressed: () async {
                                   final q = questionController.text.trim();
                                   if (q.isEmpty) return;
-                                  
+
                                   setModalState(() {
-                                    chatMessages.add({"sender": "user", "text": q});
+                                    chatMessages.add({
+                                      "sender": "user",
+                                      "text": q,
+                                    });
                                     questionController.clear();
                                   });
 
                                   // Call provider AI
-                                  final String summaryText = s.bulletPoints.join("\n");
-                                  final String reply = await provider.askGeminiAboutSermon(s.title, summaryText, q);
+                                  final String summaryText = s.bulletPoints
+                                      .join("\n");
+                                  final String reply = await provider
+                                      .askGeminiAboutSermon(
+                                        s.title,
+                                        summaryText,
+                                        q,
+                                      );
 
                                   setModalState(() {
-                                    chatMessages.add({"sender": "ai", "text": reply});
+                                    chatMessages.add({
+                                      "sender": "ai",
+                                      "text": reply,
+                                    });
                                   });
                                 },
                               ),
                             ),
                     ],
-                  )
+                  ),
                 ],
               ),
             );

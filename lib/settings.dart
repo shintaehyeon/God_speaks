@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'open_source_page.dart';
 import 'state/sermon_provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -222,6 +223,21 @@ class SettingsPage extends StatelessWidget {
                     'Preferred Bible Version',
                     sermonProvider.preferredBibleVersion,
                     () => _showBibleVersionDialog(context, sermonProvider),
+                  ),
+                  const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  _buildPreferenceOptionRow(
+                    context,
+                    Icons.integration_instructions_outlined,
+                    'Open Source Libraries',
+                    '15 packages',
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const OpenSourcePage(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

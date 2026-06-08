@@ -5,6 +5,7 @@ import 'splash.dart';
 import 'state/sermon_provider.dart';
 import 'main_navigation.dart';
 import 'live_translation.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SermonTranslatorApp extends StatelessWidget {
   const SermonTranslatorApp({Key? key}) : super(key: key);
@@ -27,6 +28,7 @@ class SermonTranslatorApp extends StatelessWidget {
           theme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.light,
+            textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
             primaryColor: const Color(0xFF2F69F8), // Sleek electric blue
             scaffoldBackgroundColor: const Color(0xFFF8F9FB), // Modern clean off-white
             colorScheme: ColorScheme.fromSeed(
@@ -60,6 +62,7 @@ class SermonTranslatorApp extends StatelessWidget {
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
+            textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
             primaryColor: const Color(0xFF2F69F8),
             scaffoldBackgroundColor: const Color(0xFF0F172A), // Premium Dark Slate/Navy
             colorScheme: ColorScheme.fromSeed(

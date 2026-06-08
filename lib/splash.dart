@@ -10,7 +10,8 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
+class _SplashPageState extends State<SplashPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -25,20 +26,25 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 1500),
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
-    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.85,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
     _controller.forward();
 
     // 2. Timer-based Routing Transition to main/login screen
     Timer(const Duration(milliseconds: 2800), () {
       if (mounted) {
-        final sermonProvider = Provider.of<SermonProvider>(context, listen: false);
+        final sermonProvider = Provider.of<SermonProvider>(
+          context,
+          listen: false,
+        );
         if (sermonProvider.user != null) {
           Navigator.pushReplacementNamed(context, '/navigation');
         } else {
@@ -86,7 +92,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                 ),
               ),
             ),
-            
+
             // Centered Animated Branding Content
             Center(
               child: FadeTransition(
@@ -96,7 +102,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Solomon Wisdom Emblem
+                      // Gods speak emblem
                       Container(
                         width: 90,
                         height: 90,
@@ -108,11 +114,12 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                               color: const Color(0xFF2F69F8).withOpacity(0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
-                            )
+                            ),
                           ],
                         ),
                         child: const Icon(
-                          Icons.insights_rounded, // Brain/Wisdom/AI matching emblem
+                          Icons
+                              .insights_rounded, // Brain/Wisdom/AI matching emblem
                           size: 44,
                           color: Color(0xFF2F69F8),
                         ),
@@ -121,7 +128,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
                       // App Logo Text
                       const Text(
-                        '솔로몬 AI',
+                        'Gods speak',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w900,
