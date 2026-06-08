@@ -83,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       body: FlutterLogin(
-        title: '솔로몬 AI',
+        title: 'Gods speak',
         logo: const AssetImage('assets/diamond.png'),
         onLogin: _authUser,
         onSignup: _signupUser,
