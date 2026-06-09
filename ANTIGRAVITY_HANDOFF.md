@@ -1,89 +1,67 @@
-# Antigravity Handoff
+# Antigravity Handoff - HISpeak
 
 ## Repository
-
 https://github.com/shintaehyeon/God_speaks
+Branch: `main`
+Commit: `7b28eba`
 
 App name: HISpeak
+Meaning: 그의 음성 (His voice)
 
-Meaning: 그의 음성
+---
 
-## Run
+## 🚀 Recently Completed Features (Commit: 7b28eba)
 
-```bash
-git clone https://github.com/shintaehyeon/God_speaks.git
-cd God_speaks
-flutter pub get
-flutter test
-flutter run
-```
+### 1. Offline Bible Verse Reference Detection
+- **Path**: `lib/services/bible_repository.dart` ➔ `BibleLibrary.parseReferences()`
+- **Details**: Implemented a RegExp-based parser that scans transcription text to detect direct scripture references (e.g., `요한복음 3장 16절`, `요 3:16`, `John 3:16`, `Romans 8`).
+- **Overlap Protection**: Matched indices are tracked via a helper class `_Range` to ensure shorter chapter-only patterns do not duplicate or corrupt longer chapter-and-verse matches on the same text.
+- **Bilingual Lookup**: Resolves references instantly from local JSON assets (`assets/bibles/korean.json` and `web.json`) without querying external APIs.
 
-For web:
+### 2. Semantic Verse Recommendation Fallback
+- **Path**: `lib/state/sermon_provider.dart` ➔ `getSemanticVerseRecommendations()`
+- **Details**: If no direct bible references are detected in the transcript, the app invokes Gemini to recommend 1-2 relevant passages. It cleans the response and resolves their text locally.
 
-```bash
-flutter run -d chrome
-```
+### 3. Premium 5-Field AI Sermon Summary Card
+- **Path**: `lib/models/sermon_summary.dart`, `lib/home.dart`, `lib/summaries.dart`
+- **Details**: Overhauled the summary representation to include:
+  1. **Main Topic (핵심 주제)**: Prominent title of the summary.
+  2. **Key Bible Passage (관련 성경 본문)**: Side-by-side or stacked Korean/English verse text in a styled quotes card.
+  3. **Short Summary (설교 요약)**: 3 clear bullet points.
+  4. **Application Points (적용점)**: 2-3 points with green check icons.
+  5. **Prayer Points (기도 제목)**: 2-3 points with pink heart icons.
+- **Firebase Sync**: The new fields (`keyScriptureTextKor`, `keyScriptureTextEng`, `applicationPoints`, `prayerPoints`) are written to Firestore summaries collection.
+- **Demo Fallback**: In simulation/demo mode, a mock summary matching this 5-field premium card is constructed using resolved Psalm 23:1 data.
 
-## Current Bible Feature
+### 4. Rebranding footer
+- **Path**: `lib/splash.dart`
+- **Details**: Updated the splash screen footer from `POWERED BY SOLOMON AI ENGINE` to `POWERED BY GOD SPEAKS AI ENGINE`.
 
-- Korean Bible data: `assets/bibles/korean.json`
-- English Bible data: `assets/bibles/web.json`
-- Reader UI: `lib/bible_page.dart`
-- Bible model: `lib/models/bible.dart`
-- Bible loader/search: `lib/services/bible_repository.dart`
-- Bottom navigation entry: `lib/main_navigation.dart`
-- Data test: `test/bible_data_test.dart`
+---
 
-The Korean Bible text is Korean Revised Version 1952/1961 from Wikisource via GetBible and is marked Public Domain. It is not the Korean Revised New Version.
+## 🧪 Testing and Quality Control
 
-The English Bible text is World English Bible via GetBible and is marked Public Domain.
+### Unit Tests
+- New test suite added: [bible_parse_test.dart](file:///Users/sintaehyeon/mobile%20app_project_personal_final/test/bible_parse_test.dart)
+- Validated book mapping, abbreviation lookups, direct Korean/English parser, chapter-only defaults, and non-scripture ignores.
+- All 8 unit tests compile and pass successfully (`flutter test`).
 
-## Prompt For Antigravity
+### Analyze
+- Checked with `flutter analyze` and verified zero compiling errors or warning blockers in new files.
 
-Continue this Flutter project as HISpeak, a bilingual sermon companion app.
+---
 
-Brand meaning: 그의 음성.
+## 🔮 Next Steps & Tasks to Work On
 
-The app already has an offline bilingual Bible reader using bundled Public Domain data:
+When you resume this project, focus on the following tasks:
 
-- Korean: `assets/bibles/korean.json`
-- English WEB: `assets/bibles/web.json`
-- Reader screen: `lib/bible_page.dart`
-- Search/data loader: `lib/services/bible_repository.dart`
+### 1. Live Integration End-to-End Test
+- Turn on `useRealAI` in settings, mount a real microphone, and run `flutter run`.
+- Speak Korean/English to verify STT acceptance, Gemini translation accuracy, and final JSON parsing inside `_stopLiveTranslation()`.
 
-Next, implement sermon intelligence in this order:
+### 2. Audio Player integration
+- The play button (`Listen`) on the summary card is currently a mock snackbar.
+- Add an audio player package (like `audioplayers`) to play real mp3 files or record and play back sermon audio clips.
 
-1. In the live sermon flow, keep STT in the original spoken language.
-   - If the sermon is Korean, transcribe Korean first, then translate to English with Gemini.
-   - If the sermon is English, transcribe English first, then translate to Korean with Gemini.
-
-2. Add Bible reference detection.
-   - Detect direct references like `요한복음 3장 16절`, `요 3:16`, `John 3:16`, and `Romans 8`.
-   - Use the bundled Bible data to fetch matched Korean/English verses.
-   - Do not call paid Bible APIs for the MVP.
-
-3. Add semantic related-verse suggestions with Gemini.
-   - When there is no direct reference, ask Gemini for likely Bible passages related to the sermon transcript.
-   - Normalize Gemini output into book/chapter/verse references.
-   - Fetch the actual verse text from the bundled local Bible data.
-
-4. Add a sermon summary card.
-   - Main topic
-   - Key Bible passage
-   - Short summary
-   - Application points
-   - Prayer points
-
-5. Keep copyright safety.
-   - Do not add NIV, ESV, NLT, Korean Revised New Version, or other copyrighted Bible texts unless a license is provided.
-   - Keep the current Public Domain KorRV/WEB data for the free MVP.
-
-Before finishing, run:
-
-```bash
-flutter pub get
-flutter test
-flutter analyze
-```
-
-Note: `flutter analyze` currently reports existing info-level warnings in older project files. Do not treat those as blockers unless new errors are introduced.
+### 3. Archive Screen Premium UI Alignment
+- The Archive screen (`lib/archive.dart`) currently renders simple saved item lists. Align the layout of archived verses to use the newly implemented premium quote container with bilingual parallel scripture blocks.
