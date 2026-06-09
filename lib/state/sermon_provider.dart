@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,11 +10,16 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../models/sermon_summary.dart';
 import '../models/saved_item.dart';
 import '../models/sermon_flow.dart';
+import '../models/bible.dart';
+import '../services/bible_repository.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class SermonProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final BibleRepository _bibleRepository = BibleRepository();
+  BibleLibrary? _bibleLibrary;
+  BibleLibrary? get bibleLibrary => _bibleLibrary;
 
   User? _user;
   User? get user => _user;
@@ -39,6 +45,23 @@ class SermonProvider extends ChangeNotifier {
   String get todaySermonSummary => _todaySermonSummary;
   String get todaySermonTranscript => _todaySermonTranscript;
   bool get hasTodaySermonSummary => _todaySermonSummary.trim().isNotEmpty;
+
+  String _todaySermonTitle = "";
+  String get todaySermonTitle => _todaySermonTitle;
+  String _todaySermonCategory = "";
+  String get todaySermonCategory => _todaySermonCategory;
+  String _todaySermonKeyScripture = "";
+  String get todaySermonKeyScripture => _todaySermonKeyScripture;
+  String _todaySermonKeyScriptureTextKor = "";
+  String get todaySermonKeyScriptureTextKor => _todaySermonKeyScriptureTextKor;
+  String _todaySermonKeyScriptureTextEng = "";
+  String get todaySermonKeyScriptureTextEng => _todaySermonKeyScriptureTextEng;
+  List<String> _todaySermonBulletPoints = [];
+  List<String> get todaySermonBulletPoints => _todaySermonBulletPoints;
+  List<String> _todaySermonApplicationPoints = [];
+  List<String> get todaySermonApplicationPoints => _todaySermonApplicationPoints;
+  List<String> _todaySermonPrayerPoints = [];
+  List<String> get todaySermonPrayerPoints => _todaySermonPrayerPoints;
 
   // User Preferences from Firestore
   String _displayName = "Alex Johnson";
@@ -110,6 +133,65 @@ class SermonProvider extends ChangeNotifier {
     });
 
     _initConnectivity();
+    _loadBibleLibrary();
+  }
+
+  Future<void> _loadBibleLibrary() async {
+    try {
+      _bibleLibrary = await _bibleRepository.loadLibrary();
+      notifyListeners();
+    } catch (e) {
+      print("Error loading bible library in SermonProvider: $e");
+    }
+  }
+
+  Future<List<BibleSearchResult>> getSemanticVerseRecommendations(
+    String transcript,
+  ) async {
+    if (_geminiModel == null || _bibleLibrary == null) return [];
+
+    final prompt = """
+You are a sermon assistant. Based on the following sermon transcript, recommend 1 or 2 most relevant Bible passages.
+Provide the response strictly as a JSON array of strings containing the book and chapter/verse, for example:
+["John 3:16", "Romans 8:28"] or ["Psalm 23:1"].
+Do not add any explanations, introductory text, markdown formatting, or code block markers. Just return the raw JSON array.
+
+Sermon Transcript:
+"$transcript"
+""";
+
+    try {
+      final response = await _geminiModel!.generateContent([Content.text(prompt)]);
+      final responseText = response.text?.trim() ?? "";
+      if (responseText.isEmpty) return [];
+
+      String cleanJson = responseText;
+      if (cleanJson.startsWith("```")) {
+        final lines = cleanJson.split("\n");
+        if (lines.first.startsWith("```")) {
+          lines.removeAt(0);
+        }
+        if (lines.isNotEmpty && lines.last.startsWith("```")) {
+          lines.removeLast();
+        }
+        cleanJson = lines.join("\n").trim();
+      }
+
+      final List<dynamic> parsed = jsonDecode(cleanJson);
+      final List<BibleSearchResult> results = [];
+      for (final ref in parsed) {
+        if (ref is String) {
+          final verses = _bibleLibrary!.parseReferences(ref);
+          if (verses.isNotEmpty) {
+            results.addAll(verses);
+          }
+        }
+      }
+      return results;
+    } catch (e) {
+      print("Semantic verse recommendation error: $e");
+      return [];
+    }
   }
 
   void _initConnectivity() {
@@ -544,41 +626,170 @@ class SermonProvider extends ChangeNotifier {
     if (translatedTranscript.isNotEmpty &&
         !translatedTranscript.contains("마이크가 활성화되었습니다")) {
       _todaySermonTranscript = translatedTranscript;
-      _todaySermonSummary = _buildLocalSermonSummary(
-        translatedTranscript,
-        rawTranscript,
-      );
-      notifyListeners();
 
-      if (_geminiModel != null) {
-        try {
-          final prompt = _isEnglishToKorean
-              ? "다음은 영어에서 한국어로 번역된 설교 텍스트입니다. 교수님 시연 화면에 바로 보여줄 짧은 한국어 요약을 3줄로 작성해 주세요. 텍스트: $translatedTranscript"
-              : "다음은 한국어 설교를 영어로 번역한 실시간 자막입니다. 교수님 시연 화면에 바로 보여줄 짧은 한국어 요약을 3줄로 작성해 주세요. 텍스트: $translatedTranscript";
-          final response = await _geminiModel!.generateContent([
-            Content.text(prompt),
-          ]);
-          if (response.text != null && response.text!.trim().isNotEmpty) {
-            _todaySermonSummary = response.text!.trim();
-            notifyListeners();
-          }
-        } catch (e) {
-          print("Gemini generation error: $e");
+      // Default fields in case of errors/fallbacks
+      String title = '오늘의 실시간 STT 설교 요약';
+      String category = 'LIVE STT';
+      List<String> summaryPoints = ['실시간 음성으로 인식된 설교 메시지입니다.'];
+      String keyScripture = '';
+      String keyScriptureTextKor = '';
+      String keyScriptureTextEng = '';
+      List<String> appPoints = ['오늘 선포된 말씀을 묵상하고 삶의 자리에서 실천합시다.'];
+      List<String> prayerPoints = ['선포된 말씀이 내 삶의 인도자가 되게 하소서.'];
+
+      // Scripture detection
+      final List<BibleSearchResult> resolvedScriptures = [];
+      if (_bibleLibrary != null) {
+        resolvedScriptures.addAll(_bibleLibrary!.parseReferences(translatedTranscript));
+        if (rawTranscript.isNotEmpty) {
+          resolvedScriptures.addAll(_bibleLibrary!.parseReferences(rawTranscript));
         }
       }
 
+      // 1. REAL AI MODE ACTIVE
+      if (_useRealAI && _geminiModel != null) {
+        // If no direct reference is found, call semantic verse recommendation
+        if (resolvedScriptures.isEmpty) {
+          try {
+            final recommended = await getSemanticVerseRecommendations(translatedTranscript);
+            resolvedScriptures.addAll(recommended);
+          } catch (e) {
+            print("Semantic verse recommendation fallback error: $e");
+          }
+        }
+
+        // Prepare key scripture reference name
+        if (resolvedScriptures.isNotEmpty) {
+          final first = resolvedScriptures.first;
+          keyScripture = '${first.koreanBookName} ${first.chapter}:${first.verse} / ${first.englishBookName} ${first.chapter}:${first.verse}';
+          keyScriptureTextKor = first.koreanText;
+          keyScriptureTextEng = first.englishText;
+        }
+
+        try {
+          final prompt = """
+You are a professional sermon assistant. Generate a structured summary of the following sermon translation/transcript.
+Provide the response strictly as a JSON object with the following keys:
+- "title": A concise main topic or title of the sermon.
+- "category": A 1-word theme/category (e.g. FAITH, LOVE, GRACE, HOPE).
+- "summary": A JSON array of 3 bullet points summarizing the sermon.
+- "keyScripture": The key Bible passage reference (e.g. "John 3:16" or "요한복음 3:16").
+- "application": A JSON array of 2-3 practical application points.
+- "prayer": A JSON array of 2-3 prayer points.
+
+Do not include any explanation or markdown formatting like ```json. Just return the raw JSON object.
+
+Sermon Transcript:
+$translatedTranscript
+""";
+
+          final response = await _geminiModel!.generateContent([Content.text(prompt)]);
+          if (response.text != null && response.text!.trim().isNotEmpty) {
+            String cleanJson = response.text!.trim();
+            if (cleanJson.startsWith("```")) {
+              final lines = cleanJson.split("\n");
+              if (lines.first.startsWith("```")) {
+                lines.removeAt(0);
+              }
+              if (lines.isNotEmpty && lines.last.startsWith("```")) {
+                lines.removeLast();
+              }
+              cleanJson = lines.join("\n").trim();
+            }
+
+            try {
+              final Map<String, dynamic> summaryJson = jsonDecode(cleanJson);
+              title = summaryJson['title'] ?? title;
+              category = (summaryJson['category'] ?? category).toUpperCase();
+              summaryPoints = List<String>.from(summaryJson['summary'] ?? summaryPoints);
+              
+              // If Gemini returned a different key passage, try to resolve it
+              final String geminiScripture = summaryJson['keyScripture'] ?? '';
+              if (geminiScripture.isNotEmpty && _bibleLibrary != null) {
+                final resolved = _bibleLibrary!.parseReferences(geminiScripture);
+                if (resolved.isNotEmpty) {
+                  final first = resolved.first;
+                  keyScripture = '${first.koreanBookName} ${first.chapter}:${first.verse}';
+                  keyScriptureTextKor = first.koreanText;
+                  keyScriptureTextEng = first.englishText;
+                } else {
+                  keyScripture = geminiScripture;
+                }
+              }
+              
+              appPoints = List<String>.from(summaryJson['application'] ?? appPoints);
+              prayerPoints = List<String>.from(summaryJson['prayer'] ?? prayerPoints);
+            } catch (jsonErr) {
+              print("Failed parsing Gemini JSON summary: $jsonErr");
+            }
+          }
+        } catch (e) {
+          print("Gemini structured summary error: $e");
+        }
+      } 
+      // 2. SIMULATION/DEMO MODE ACTIVE
+      else {
+        // Resolve default references (Psalm 23:1) for demonstration
+        if (_bibleLibrary != null) {
+          final first = _bibleLibrary!.lookupReference("시편", 23, 1);
+          if (first != null) {
+            resolvedScriptures.add(first);
+            keyScripture = '${first.koreanBookName} ${first.chapter}:${first.verse} / ${first.englishBookName} ${first.chapter}:${first.verse}';
+            keyScriptureTextKor = first.koreanText;
+            keyScriptureTextEng = first.englishText;
+          }
+        }
+        
+        title = '선한 목자의 인도하심 (The Good Shepherd)';
+        category = 'FAITH';
+        summaryPoints = [
+          '여호와께서 우리의 목자가 되심으로써 우리는 어떠한 부족함도 느끼지 않습니다.',
+          '인생의 사망의 음침한 골짜기를 지나갈 때에도 주께서 늘 동행하시기에 요동치 않습니다.',
+          '주의 지팡이와 막대기가 보호하시며 원수 앞에서도 상을 넘치도록 베풀어 주십니다.'
+        ];
+        appPoints = [
+          '목자 되신 하나님을 전적으로 신뢰하며 매일의 불안을 주께 내어 맡깁니다.',
+          '가장 어려운 시기에도 평강을 주시는 성령의 보호하심을 의지합니다.'
+        ];
+        prayerPoints = [
+          '선한 목자의 음성만을 온전히 따르는 순종의 자녀가 되게 하소서.',
+          '사망의 골짜기 앞에서도 오직 주의 도우심만을 바라보게 하소서.'
+        ];
+      }
+
+      _todaySermonTitle = title;
+      _todaySermonCategory = category;
+      _todaySermonKeyScripture = keyScripture;
+      _todaySermonKeyScriptureTextKor = keyScriptureTextKor;
+      _todaySermonKeyScriptureTextEng = keyScriptureTextEng;
+      _todaySermonBulletPoints = summaryPoints;
+      _todaySermonApplicationPoints = appPoints;
+      _todaySermonPrayerPoints = prayerPoints;
+
+      // Construct markdown string for home screen backward compatibility
+      _todaySermonSummary = _formatSummaryMarkdown(
+        title,
+        keyScripture,
+        keyScriptureTextKor,
+        keyScriptureTextEng,
+        summaryPoints,
+        appPoints,
+        prayerPoints,
+      );
+      notifyListeners();
+
       try {
         await _firestore.collection('summaries').add({
-          'title': '오늘의 실시간 STT 설교 요약',
+          'title': title,
           'date': DateTime.now().toString().substring(0, 10),
-          'category': 'LIVE STT',
-          'bulletPoints': [
-            _todaySermonSummary,
-            if (rawTranscript.isNotEmpty) 'STT 원문: $rawTranscript',
-            '자막 전문: $translatedTranscript',
-          ],
-          'keyScripture': '실시간 음성 인식 세션',
-          'takeaway': '방금 인식된 설교 음성을 홈 화면에 바로 요약했습니다.',
+          'category': category,
+          'bulletPoints': summaryPoints,
+          'keyScripture': keyScripture.isNotEmpty ? keyScripture : '실시간 음성 인식 세션',
+          'keyScriptureTextKor': keyScriptureTextKor,
+          'keyScriptureTextEng': keyScriptureTextEng,
+          'applicationPoints': appPoints,
+          'prayerPoints': prayerPoints,
+          'takeaway': appPoints.isNotEmpty ? appPoints.first : '방금 인식된 설교 음성을 홈 화면에 바로 요약했습니다.',
           'audioUrl': 'assets/sample_sermon.mp3',
           'rawTranscript': rawTranscript,
           'translatedTranscript': translatedTranscript,
@@ -593,21 +804,47 @@ class SermonProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _buildLocalSermonSummary(
-    String translatedTranscript,
-    String rawTranscript,
+  String _formatSummaryMarkdown(
+    String title,
+    String keyScripture,
+    String keyScriptureTextKor,
+    String keyScriptureTextEng,
+    List<String> summaryPoints,
+    List<String> appPoints,
+    List<String> prayerPoints,
   ) {
-    final sourceText = rawTranscript.isNotEmpty
-        ? rawTranscript
-        : translatedTranscript;
-    final compactText = sourceText.replaceAll(RegExp(r'\s+'), ' ').trim();
-    final preview = compactText.length > 140
-        ? "${compactText.substring(0, 140)}..."
-        : compactText;
-
-    return "- **핵심 요약:** 실시간 음성으로 인식된 설교 메시지입니다.\n"
-        "- **주요 발화:** $preview\n"
-        "- **저장 위치:** 자막 전문은 홈 카드와 지난 요약본에 저장되었습니다.";
+    final buffer = StringBuffer();
+    buffer.writeln("### ⛪ 핵심 주제: $title");
+    buffer.writeln();
+    if (keyScripture.isNotEmpty) {
+      buffer.writeln("📖 **관련 성경 본문:** $keyScripture");
+      if (keyScriptureTextKor.isNotEmpty) {
+        buffer.writeln("> $keyScriptureTextKor");
+      }
+      if (keyScriptureTextEng.isNotEmpty) {
+        buffer.writeln("> *${keyScriptureTextEng}*");
+      }
+      buffer.writeln();
+    }
+    buffer.writeln("💡 **설교 요약:**");
+    for (final pt in summaryPoints) {
+      buffer.writeln("- $pt");
+    }
+    buffer.writeln();
+    if (appPoints.isNotEmpty) {
+      buffer.writeln("🏃 **적용점:**");
+      for (final pt in appPoints) {
+        buffer.writeln("- $pt");
+      }
+      buffer.writeln();
+    }
+    if (prayerPoints.isNotEmpty) {
+      buffer.writeln("🙏 **기도 제목:**");
+      for (final pt in prayerPoints) {
+        buffer.writeln("- $pt");
+      }
+    }
+    return buffer.toString();
   }
 
   // 3. Summaries Collection Sync & Default Inserter

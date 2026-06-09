@@ -273,7 +273,7 @@ class HomePage extends StatelessWidget {
               ),
               if (sermonProvider.hasTodaySermonSummary) ...[
                 const SizedBox(height: 16),
-                _buildTodaySermonSummaryCard(sermonProvider),
+                _buildTodaySermonSummaryCard(context, sermonProvider),
               ],
               const SizedBox(height: 24),
 
@@ -417,91 +417,349 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildTodaySermonSummaryCard(SermonProvider provider) {
-    final transcript = provider.todaySermonTranscript.trim();
-    final preview = transcript.length > 220
-        ? "${transcript.substring(0, 220)}..."
-        : transcript;
+  Widget _buildTodaySermonSummaryCard(BuildContext context, SermonProvider provider) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Fallback if structured data is empty
+    if (provider.todaySermonTitle.isEmpty) {
+      final transcript = provider.todaySermonTranscript.trim();
+      final preview = transcript.length > 220
+          ? "${transcript.substring(0, 220)}..."
+          : transcript;
 
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFBFDBFE),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2F69F8).withOpacity(0.06),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.summarize_rounded, color: Color(0xFF2F69F8), size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  '오늘의 설교 요약',
+                  style: TextStyle(
+                    color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            MarkdownBody(
+              data: provider.todaySermonSummary,
+              styleSheet: MarkdownStyleSheet(
+                p: TextStyle(
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                  fontSize: 13,
+                  height: 1.45,
+                  fontWeight: FontWeight.w600,
+                ),
+                strong: TextStyle(
+                  color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                  fontWeight: FontWeight.w900,
+                ),
+                listBullet: const TextStyle(
+                  color: Color(0xFF2F69F8),
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            if (preview.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  preview,
+                  style: TextStyle(
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
+            const Text(
+              '지난 요약본에도 자동 저장됨',
+              style: TextStyle(
+                color: Color(0xFF2F69F8),
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Premium structured UI
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFBFDBFE), width: 1.5),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFDBEAFE),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF2F69F8).withOpacity(0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Row
           Row(
-            children: const [
-              Icon(Icons.summarize_rounded, color: Color(0xFF2F69F8), size: 20),
-              SizedBox(width: 8),
-              Text(
-                '오늘의 설교 요약',
-                style: TextStyle(
-                  color: Color(0xFF1E293B),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                ),
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.stars_rounded, color: Color(0xFF2F69F8), size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    '오늘의 설교 분석',
+                    style: TextStyle(
+                      color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
+              if (provider.todaySermonCategory.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEBF2FF),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    provider.todaySermonCategory,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2F69F8),
+                    ),
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 10),
-          MarkdownBody(
-            data: provider.todaySermonSummary,
-            styleSheet: MarkdownStyleSheet(
-              p: const TextStyle(
-                color: Color(0xFF475569),
-                fontSize: 13,
-                height: 1.45,
-                fontWeight: FontWeight.w600,
-              ),
-              strong: const TextStyle(
-                color: Color(0xFF1E293B),
-                fontWeight: FontWeight.w900,
-              ),
-              listBullet: const TextStyle(
-                color: Color(0xFF2F69F8),
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
+          const SizedBox(height: 16),
+          
+          // Title / Main Topic
+          Text(
+            provider.todaySermonTitle,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+              height: 1.3,
             ),
           ),
-          if (preview.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Text(
-                preview,
-                style: const TextStyle(
-                  color: Color(0xFF64748B),
-                  fontSize: 12,
-                  height: 1.4,
-                ),
+          const SizedBox(height: 16),
+
+          // Key Scripture & Parallel Verse Container
+          if (provider.todaySermonKeyScripture.isNotEmpty) ...[
+            Text(
+              '📖 관련 성경 본문',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
               ),
             ),
+            const SizedBox(height: 6),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    provider.todaySermonKeyScripture,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                    ),
+                  ),
+                  if (provider.todaySermonKeyScriptureTextKor.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      provider.todaySermonKeyScriptureTextKor,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                  if (provider.todaySermonKeyScriptureTextEng.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      provider.todaySermonKeyScriptureTextEng,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
+
+          // Sermon Summary Bullet Points
+          if (provider.todaySermonBulletPoints.isNotEmpty) ...[
+            Text(
+              '💡 핵심 요약',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...provider.todaySermonBulletPoints.map((pt) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('• ', style: TextStyle(color: Color(0xFF2F69F8), fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text(
+                      pt,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+            const SizedBox(height: 12),
+          ],
+
+          // Application Points
+          if (provider.todaySermonApplicationPoints.isNotEmpty) ...[
+            Text(
+              '🏃 삶의 적용점',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...provider.todaySermonApplicationPoints.map((pt) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.check_circle_outline_rounded, size: 14, color: Color(0xFF10B981)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      pt,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+            const SizedBox(height: 12),
+          ],
+
+          // Prayer Points
+          if (provider.todaySermonPrayerPoints.isNotEmpty) ...[
+            Text(
+              '🙏 기도 제목',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...provider.todaySermonPrayerPoints.map((pt) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.favorite_rounded, size: 14, color: Color(0xFFEC4899)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      pt,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+          ],
+
+          const SizedBox(height: 14),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
           const SizedBox(height: 10),
-          const Text(
-            '지난 요약본에도 자동 저장됨',
-            style: TextStyle(
-              color: Color(0xFF2F69F8),
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
+          const Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '지난 요약본에도 자동 저장됨',
+              style: TextStyle(
+                color: Color(0xFF2F69F8),
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

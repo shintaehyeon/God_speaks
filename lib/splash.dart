@@ -177,7 +177,7 @@ class _SplashPageState extends State<SplashPage>
               right: 0,
               child: Center(
                 child: Text(
-                  'POWERED BY SOLOMON AI ENGINE',
+                  'POWERED BY GOD SPEAKS AI ENGINE',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

@@ -350,29 +350,192 @@ class _SummariesPageState extends State<SummariesPage> {
                     height: 20,
                   ),
 
-                  MarkdownBody(
-                    data: _summaryMarkdown(s.bulletPoints),
-                    styleSheet: MarkdownStyleSheet(
-                      p: TextStyle(
-                        color: isDark
-                            ? const Color(0xFFCBD5E1)
-                            : const Color(0xFF475569),
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                      strong: TextStyle(
-                        color: isDark
-                            ? const Color(0xFFF1F5F9)
-                            : const Color(0xFF1E293B),
-                        fontWeight: FontWeight.bold,
-                      ),
-                      listBullet: const TextStyle(
-                        color: Color(0xFF2F69F8),
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                  if (s.applicationPoints.isEmpty && s.prayerPoints.isEmpty) ...[
+                    MarkdownBody(
+                      data: _summaryMarkdown(s.bulletPoints),
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(
+                          color: isDark
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFF475569),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                        strong: TextStyle(
+                          color: isDark
+                              ? const Color(0xFFF1F5F9)
+                              : const Color(0xFF1E293B),
+                          fontWeight: FontWeight.bold,
+                        ),
+                        listBullet: const TextStyle(
+                          color: Color(0xFF2F69F8),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
+                  ] else ...[
+                    // Key Scripture & Parallel Verse Container
+                    if (s.keyScripture.isNotEmpty && s.keyScripture != '실시간 음성 인식 세션') ...[
+                      Text(
+                        '📖 관련 성경 본문',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              s.keyScripture,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                              ),
+                            ),
+                            if (s.keyScriptureTextKor.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                s.keyScriptureTextKor,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                            if (s.keyScriptureTextEng.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                s.keyScriptureTextEng,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Sermon Summary Bullet Points
+                    if (s.bulletPoints.isNotEmpty) ...[
+                      Text(
+                        '💡 핵심 요약',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ...s.bulletPoints.map((pt) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('• ', style: TextStyle(color: Color(0xFF2F69F8), fontWeight: FontWeight.bold)),
+                            Expanded(
+                              child: Text(
+                                pt,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                      const SizedBox(height: 12),
+                    ],
+
+                    // Application Points
+                    if (s.applicationPoints.isNotEmpty) ...[
+                      Text(
+                        '🏃 삶의 적용점',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ...s.applicationPoints.map((pt) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.check_circle_outline_rounded, size: 14, color: Color(0xFF10B981)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                pt,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                      const SizedBox(height: 12),
+                    ],
+
+                    // Prayer Points
+                    if (s.prayerPoints.isNotEmpty) ...[
+                      Text(
+                        '🙏 기도 제목',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ...s.prayerPoints.map((pt) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.favorite_rounded, size: 14, color: Color(0xFFEC4899)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                pt,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                    ],
+                  ],
 
                   const SizedBox(height: 8),
 

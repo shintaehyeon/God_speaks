@@ -11,6 +11,12 @@ class SermonSummary {
   final String audioUrl;
   final DateTime timestamp;
 
+  // Premium sermon summary fields
+  final String keyScriptureTextKor;
+  final String keyScriptureTextEng;
+  final List<String> applicationPoints;
+  final List<String> prayerPoints;
+
   SermonSummary({
     required this.id,
     required this.title,
@@ -21,6 +27,10 @@ class SermonSummary {
     required this.takeaway,
     required this.audioUrl,
     required this.timestamp,
+    this.keyScriptureTextKor = '',
+    this.keyScriptureTextEng = '',
+    this.applicationPoints = const [],
+    this.prayerPoints = const [],
   });
 
   factory SermonSummary.fromFirestore(DocumentSnapshot doc) {
@@ -35,6 +45,10 @@ class SermonSummary {
       takeaway: data['takeaway'] ?? '',
       audioUrl: data['audioUrl'] ?? '',
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      keyScriptureTextKor: data['keyScriptureTextKor'] ?? '',
+      keyScriptureTextEng: data['keyScriptureTextEng'] ?? '',
+      applicationPoints: List<String>.from(data['applicationPoints'] ?? []),
+      prayerPoints: List<String>.from(data['prayerPoints'] ?? []),
     );
   }
 
@@ -48,6 +62,10 @@ class SermonSummary {
       'takeaway': takeaway,
       'audioUrl': audioUrl,
       'timestamp': Timestamp.fromDate(timestamp),
+      'keyScriptureTextKor': keyScriptureTextKor,
+      'keyScriptureTextEng': keyScriptureTextEng,
+      'applicationPoints': applicationPoints,
+      'prayerPoints': prayerPoints,
     };
   }
 }
