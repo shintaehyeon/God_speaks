@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'state/sermon_provider.dart';
 import 'models/sermon_summary.dart';
+import 'theme.dart';
 
 class SummariesPage extends StatefulWidget {
   const SummariesPage({Key? key}) : super(key: key);
@@ -40,10 +41,8 @@ class _SummariesPageState extends State<SummariesPage> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.menu_rounded),
           onPressed: () {
@@ -75,23 +74,26 @@ class _SummariesPageState extends State<SummariesPage> {
               child: Container(
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xFFEBF2FF),
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF3F0FF),
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
                   Icons.add_rounded,
                   size: 18,
-                  color: Color(0xFF2F69F8),
+                  color: HISpeakTheme.purpleMain,
                 ),
               ),
             ),
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
+          HISpeakTheme.buildIridescentBg(context),
+          Column(
+            children: [
           // 1. Search Bar
           Container(
             color: Theme.of(context).colorScheme.surface,
@@ -193,6 +195,8 @@ class _SummariesPageState extends State<SummariesPage> {
           ),
         ],
       ),
+    ],
+  ),
     );
   }
 
@@ -215,9 +219,15 @@ class _SummariesPageState extends State<SummariesPage> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF2F69F8)
-              : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+              ? HISpeakTheme.purpleMain
+              : (isDark ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.35)),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? HISpeakTheme.purpleMain
+                : (isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.5)),
+            width: 1.5,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -260,24 +270,107 @@ class _SummariesPageState extends State<SummariesPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sermonProvider = Provider.of<SermonProvider>(context);
     final isPremium = sermonProvider.userRole.contains("👑");
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-          width: 1.5,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Dismissible(
+        key: Key(s.id),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 24.0),
+          decoration: BoxDecoration(
+            color: Colors.redAccent.shade200,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: const [
+              Text(
+                '삭제',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(width: 8),
+              Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ],
+          ),
         ),
-      ),
-      child: Theme(
+        confirmDismiss: (direction) async {
+          return await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              title: Text(
+                '요약본 삭제',
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: Text(
+                '정말로 이 설교 요약본을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며, 앱과 서버에서 영구 삭제됩니다.',
+                style: TextStyle(
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                  fontSize: 14,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(
+                    '취소',
+                    style: TextStyle(
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('삭제'),
+                ),
+              ],
+            ),
+          ) ?? false;
+        },
+        onDismissed: (direction) async {
+          await sermonProvider.deleteSummary(s.id);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('설교 요약본이 성공적으로 삭제되었습니다.'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        },
+        child: PremiumGlassCard(
+          borderRadius: 16,
+          padding: EdgeInsets.zero,
+          child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: isExpanded,
           key: PageStorageKey(s.id),
           onExpansionChanged: (expanded) {
-            setState(() {
-              _expandedId = expanded ? s.id : null;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() {
+                  _expandedId = expanded ? s.id : null;
+                });
+              }
             });
           },
           title: Column(
@@ -290,7 +383,7 @@ class _SummariesPageState extends State<SummariesPage> {
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2F69F8),
+                      color: HISpeakTheme.purpleMain,
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -368,7 +461,7 @@ class _SummariesPageState extends State<SummariesPage> {
                           fontWeight: FontWeight.bold,
                         ),
                         listBullet: const TextStyle(
-                          color: Color(0xFF2F69F8),
+                          color: HISpeakTheme.purpleMain,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -390,7 +483,7 @@ class _SummariesPageState extends State<SummariesPage> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          color: isDark ? const Color(0xFF0F172A).withOpacity(0.4) : const Color(0xFFF8FAFC).withOpacity(0.4),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
@@ -404,7 +497,7 @@ class _SummariesPageState extends State<SummariesPage> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                                color: isDark ? const Color(0xFFC4B5FD) : HISpeakTheme.purpleMain,
                               ),
                             ),
                             if (s.keyScriptureTextKor.isNotEmpty) ...[
@@ -452,7 +545,7 @@ class _SummariesPageState extends State<SummariesPage> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('• ', style: TextStyle(color: Color(0xFF2F69F8), fontWeight: FontWeight.bold)),
+                            const Text('• ', style: TextStyle(color: HISpeakTheme.purpleMain, fontWeight: FontWeight.bold)),
                             Expanded(
                               child: Text(
                                 pt,
@@ -559,8 +652,8 @@ class _SummariesPageState extends State<SummariesPage> {
                         ),
                         label: const Text('Listen'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEBF2FF),
-                          foregroundColor: const Color(0xFF2F69F8),
+                          backgroundColor: HISpeakTheme.bgLavender,
+                          foregroundColor: HISpeakTheme.purpleMain,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -594,10 +687,10 @@ class _SummariesPageState extends State<SummariesPage> {
                         label: Text(isPremium ? 'AI 질문' : 'AI 질문 🔒'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isPremium
-                              ? const Color(0xFFEFF6FF)
+                              ? HISpeakTheme.bgLavender
                               : const Color(0xFFFEF2F2),
                           foregroundColor: isPremium
-                              ? const Color(0xFF2F69F8)
+                              ? HISpeakTheme.purpleMain
                               : const Color(0xFFEF4444),
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
@@ -691,6 +784,8 @@ Generated dynamically by HISpeak.
             ),
           ],
         ),
+      ),
+    ),
       ),
     );
   }

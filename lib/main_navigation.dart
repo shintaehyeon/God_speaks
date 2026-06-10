@@ -5,6 +5,8 @@ import 'summaries.dart';
 import 'archive.dart';
 import 'settings.dart';
 
+import 'theme.dart';
+
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
 
@@ -25,11 +27,19 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Color(0xFFF1F5F9), width: 1.5)),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF1F5F9),
+              width: 1.5,
+            ),
+          ),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
@@ -39,9 +49,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             });
           },
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF2F69F8), // Active Electric Blue
-          unselectedItemColor: const Color(0xFF94A3B8), // Muted Gray-Blue
+          backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+          selectedItemColor: HISpeakTheme.purpleMain, // Active Purple
+          unselectedItemColor: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8), // Muted Gray-Blue
           selectedLabelStyle: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'state/sermon_provider.dart';
+import 'theme.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -62,133 +63,117 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white, // Sleek premium clean white background
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Subtly textured background graphics inspired by Shrine
-            Positioned(
-              top: -100,
-              right: -100,
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF2F69F8).withOpacity(0.04),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -50,
-              left: -50,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF2F69F8).withOpacity(0.03),
-                ),
-              ),
-            ),
-
-            // Centered Animated Branding Content
-            Center(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // HISpeak emblem
-                      Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFFEBF2FF),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF2F69F8).withOpacity(0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          HISpeakTheme.buildIridescentBg(context),
+          SafeArea(
+            child: Stack(
+              children: [
+                // Centered Animated Branding Content
+                Center(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: ScaleTransition(
+                      scale: _scaleAnimation,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // HISpeak emblem
+                          Container(
+                            width: 150,
+                            height: 150,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: HISpeakTheme.purpleMain.withOpacity(isDark ? 0.35 : 0.15),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons
-                              .insights_rounded, // Brain/Wisdom/AI matching emblem
-                          size: 44,
-                          color: Color(0xFF2F69F8),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // App Logo Text
-                      const Text(
-                        'HISpeak',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF1E293B),
-                          letterSpacing: 1.5,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Premium Subtext
-                      const Text(
-                        '지혜롭고 영감 있는 실시간 예배 번역기',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
-                          letterSpacing: 0.5,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                      const SizedBox(height: 48),
-
-                      // Premium Progress Indicator
-                      SizedBox(
-                        width: 48,
-                        height: 3,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: const LinearProgressIndicator(
-                            color: Color(0xFF2F69F8),
-                            backgroundColor: Color(0xFFE2E8F0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(32),
+                              child: Image.asset(
+                                'assets/hispeak_clean_logo.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                          const SizedBox(height: 24),
 
-            // Bottom Brand Signature
-            Positioned(
-              bottom: 24,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Text(
-                  'POWERED BY GOD SPEAKS AI ENGINE',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF94A3B8).withOpacity(0.7),
-                    letterSpacing: 2.0,
+                          // App Logo Text
+                          Text(
+                            'HISpeak',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              color: isDark ? Colors.white : const Color(0xFF1E293B),
+                              letterSpacing: 1.5,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+
+                          // Premium Subtext
+                          Text(
+                            '지혜롭고 영감 있는 실시간 예배 번역기',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
+                              letterSpacing: 0.5,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+
+                          // Premium Progress Indicator
+                          SizedBox(
+                            width: 48,
+                            height: 3,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(2),
+                              child: const LinearProgressIndicator(
+                                color: HISpeakTheme.purpleMain,
+                                backgroundColor: Color(0xFFE2E8F0),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+
+                // Bottom Brand Signature
+                Positioned(
+                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Text(
+                      'POWERED BY GOD SPEAKS AI ENGINE',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? const Color(0xFF94A3B8).withOpacity(0.6)
+                            : const Color(0xFF64748B).withOpacity(0.8),
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

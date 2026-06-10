@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'login.dart';
 import 'splash.dart';
@@ -29,29 +30,33 @@ class SermonTranslatorApp extends StatelessWidget {
             useMaterial3: true,
             brightness: Brightness.light,
             textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
-            primaryColor: const Color(0xFF2F69F8), // Sleek electric blue
-            scaffoldBackgroundColor: const Color(
-              0xFFF8F9FB,
-            ), // Modern clean off-white
+            primaryColor: const Color(0xFF8B5CF6), // Sleek royal lavender
+            scaffoldBackgroundColor: const Color(0xFFF5F3FF), // Bright lavender-white
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF2F69F8),
-              primary: const Color(0xFF2F69F8),
-              secondary: const Color(0xFFEBF2FF),
-              background: const Color(0xFFF8F9FB),
+              brightness: Brightness.light,
+              seedColor: const Color(0xFF8B5CF6),
+              primary: const Color(0xFF8B5CF6),
+              secondary: const Color(0xFFE5DEFF),
+              background: const Color(0xFFF5F3FF),
             ),
             cardTheme: const CardThemeData(
               color: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(16)),
-                side: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+                side: BorderSide(color: Color(0xFFE2E8F0), width: 1),
               ),
             ),
             appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.white,
+              backgroundColor: Color(0xFFEDE9FE), // Soft light lavender background for status/appbar distinction
               foregroundColor: Color(0xFF1E293B),
               elevation: 0,
               centerTitle: true,
+              systemOverlayStyle: SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.light,
+              ),
               titleTextStyle: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 18,
@@ -65,16 +70,14 @@ class SermonTranslatorApp extends StatelessWidget {
             useMaterial3: true,
             brightness: Brightness.dark,
             textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
-            primaryColor: const Color(0xFF2F69F8),
-            scaffoldBackgroundColor: const Color(
-              0xFF0F172A,
-            ), // Premium Dark Slate/Navy
+            primaryColor: const Color(0xFF8B5CF6),
+            scaffoldBackgroundColor: const Color(0xFF0D061E), // Premium deep royal purple
             colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.dark,
-              seedColor: const Color(0xFF2F69F8),
-              primary: const Color(0xFF2F69F8),
-              secondary: const Color(0xFF1E293B),
-              background: const Color(0xFF0F172A),
+              seedColor: const Color(0xFF8B5CF6),
+              primary: const Color(0xFF8B5CF6),
+              secondary: const Color(0xFF1E1B4B),
+              background: const Color(0xFF0D061E),
             ),
             cardTheme: const CardThemeData(
               color: Color(0xFF1E293B),
@@ -85,10 +88,15 @@ class SermonTranslatorApp extends StatelessWidget {
               ),
             ),
             appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFF0F172A),
+              backgroundColor: Color(0xFF160E2E), // Deep purple background for status/appbar distinction
               foregroundColor: Color(0xFFF1F5F9),
               elevation: 0,
               centerTitle: true,
+              systemOverlayStyle: SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+              ),
               titleTextStyle: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 18,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'state/sermon_provider.dart';
+import 'theme.dart';
+import 'dart:ui';
 
 class LiveTranslationPage extends StatefulWidget {
   const LiveTranslationPage({Key? key}) : super(key: key);
@@ -61,11 +63,10 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
   Widget build(BuildContext context) {
     final sermonProvider = Provider.of<SermonProvider>(context);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () {
@@ -88,9 +89,13 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
               ),
             ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               '실시간 번역 활성 중',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+              ),
             ),
           ],
         ),
@@ -99,7 +104,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFEBF2FF),
+              color: isDark ? const Color(0xFF1E1B4B) : const Color(0xFFF3F0FF),
               borderRadius: BorderRadius.circular(6),
             ),
             child: const Text(
@@ -107,13 +112,16 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2F69F8),
+                color: HISpeakTheme.purpleMain,
               ),
             ),
           )
         ],
       ),
-      body: Column(
+      body: Stack(
+        children: [
+          HISpeakTheme.buildIridescentBg(context),
+          Column(
         children: [
           // 1. Live Sermon Flow Timeline (Top Half)
           Expanded(
@@ -183,21 +191,9 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                             Expanded(
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 24),
-                                child: Container(
+                                child: PremiumGlassCard(
+                                  borderRadius: 16,
                                   padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: isLast && step.type == 'pending'
-                                          ? const Color(0xFF2F69F8).withOpacity(0.3)
-                                          : const Color(0xFFF1F5F9),
-                                      width: 1.5,
-                                      style: isLast && step.type == 'pending'
-                                          ? BorderStyle.solid
-                                          : BorderStyle.none,
-                                    ),
-                                  ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
@@ -207,25 +203,25 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                           color: isLast && step.type == 'pending'
-                                              ? const Color(0xFF2F69F8)
+                                              ? HISpeakTheme.purpleMain
                                               : const Color(0xFF94A3B8),
                                         ),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
                                         step.title,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFF1E293B),
+                                          color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         step.description,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 13,
-                                          color: Color(0xFF475569),
+                                          color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                                           height: 1.3,
                                         ),
                                       ),
@@ -249,7 +245,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
           if (sermonProvider.isRecording)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              color: Colors.white,
+              color: Colors.transparent,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
@@ -262,7 +258,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                       width: 3.5,
                       height: 10 + (val * 40),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2F69F8).withOpacity(0.85),
+                        color: HISpeakTheme.purpleMain.withOpacity(0.85),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -274,24 +270,28 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
           // 3. Live Transcription Card (Bottom Half)
           Expanded(
             flex: 8,
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(28),
-                  topRight: Radius.circular(28),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 20,
-                    offset: Offset(0, -5),
-                  ),
-                ],
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(28),
+                topRight: Radius.circular(28),
               ),
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Stack(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B).withOpacity(0.5) : Colors.white.withOpacity(0.45),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(28),
+                      topRight: Radius.circular(28),
+                    ),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.5),
+                      width: 1.5,
+                    ),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                  child: Stack(
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +304,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                               Icon(
                                 Icons.translate_rounded,
                                 size: 16,
-                                color: Color(0xFF2F69F8),
+                                color: HISpeakTheme.purpleMain,
                               ),
                               SizedBox(width: 6),
                               Text(
@@ -312,7 +312,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2F69F8),
+                                  color: HISpeakTheme.purpleMain,
                                   letterSpacing: 1.0,
                                 ),
                               ),
@@ -341,10 +341,10 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                               sermonProvider.liveTranslationText.isEmpty
                                   ? "Waiting for sermon to begin..."
                                   : sermonProvider.liveTranslationText,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF1E293B),
+                                color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
                                 height: 1.5,
                               ),
                             ),
@@ -359,8 +359,8 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                     right: 0,
                     bottom: 4,
                     child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -373,7 +373,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                       child: IconButton(
                         icon: const Icon(
                           Icons.bookmark_outline_rounded,
-                          color: Color(0xFF2F69F8),
+                          color: HISpeakTheme.purpleMain,
                           size: 24,
                         ),
                         onPressed: () {
@@ -392,16 +392,22 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
               ),
             ),
           ),
+        ),
+      ),
 
           // 4. Fixed Switch Mode bar at bottom
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            color: Colors.white,
+            color: Colors.transparent,
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: isDark ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.35),
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.5),
+                  width: 1.5,
+                ),
               ),
               child: Row(
                 children: [
@@ -413,6 +419,8 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
           ),
         ],
       ),
+    ],
+  ),
       floatingActionButton: sermonProvider.isRecording
           ? FloatingActionButton.extended(
               onPressed: () async {
@@ -444,7 +452,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF2F69F8) : Colors.transparent,
+            color: isActive ? HISpeakTheme.purpleMain : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -461,14 +469,15 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
   }
 
   Widget _buildTimelineIcon(String type) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     Color bg;
     IconData icon;
     
     if (type == 'topic') {
-      bg = const Color(0xFF2F69F8);
+      bg = HISpeakTheme.purpleMain;
       icon = Icons.numbers_rounded; // Represents '#'
     } else if (type == 'scripture') {
-      bg = const Color(0xFFEBF2FF);
+      bg = isDark ? const Color(0xFF1E1B4B) : HISpeakTheme.bgLavender;
       icon = Icons.menu_book_rounded;
     } else {
       bg = const Color(0xFFE2E8F0);
@@ -486,7 +495,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
       child: Icon(
         icon,
         size: 16,
-        color: type == 'topic' ? Colors.white : const Color(0xFF2F69F8),
+        color: type == 'topic' ? Colors.white : HISpeakTheme.purpleMain,
       ),
     );
   }

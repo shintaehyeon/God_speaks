@@ -85,6 +85,13 @@ flutter:
     - assets/diamond.png
     - assets/profile.png
     - assets/bible_verse.png
+    - assets/bible_verse_2.png
+    - assets/bible_verse_3.png
+    - assets/bible_verse_4.png
+    - assets/hispeak_logo.png
+    - assets/hispeak_square_logo.png
+    - assets/hispeak_clean_logo.png
+    - assets/sermon_banner.png
     - assets/bibles/korean.json
     - assets/bibles/web.json
 

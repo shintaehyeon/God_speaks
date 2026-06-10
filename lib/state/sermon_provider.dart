@@ -70,7 +70,7 @@ class SermonProvider extends ChangeNotifier {
   String get userRole => _userRole;
   String _translationLanguage = "English";
   String get translationLanguage => _translationLanguage;
-  String _appearance = "System Default";
+  String _appearance = "Light Mode";
   String get appearance => _appearance;
   bool _pushNotifications = true;
   bool get pushNotifications => _pushNotifications;
@@ -238,7 +238,7 @@ Sermon Transcript:
         _displayName = data['displayName'] ?? "Alex Johnson";
         _userRole = data['userRole'] ?? "Premium Member since 2023";
         _translationLanguage = data['translationLanguage'] ?? "English";
-        _appearance = data['appearance'] ?? "System Default";
+        _appearance = data['appearance'] ?? "Light Mode";
         _pushNotifications = data['pushNotifications'] ?? true;
         _preferredBibleVersion = data['preferredBibleVersion'] ?? "NIV";
         _useRealAI = data['useRealAI'] ?? false;
@@ -802,6 +802,14 @@ $translatedTranscript
     }
 
     notifyListeners();
+  }
+
+  Future<void> deleteSummary(String summaryId) async {
+    try {
+      await _firestore.collection('summaries').doc(summaryId).delete();
+    } catch (e) {
+      print("Error deleting summary: $e");
+    }
   }
 
   String _formatSummaryMarkdown(
