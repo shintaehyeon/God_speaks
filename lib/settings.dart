@@ -260,6 +260,22 @@ class SettingsPage extends StatelessWidget {
                             );
                           },
                         ),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                        _buildPreferenceOptionRow(
+                          context,
+                          Icons.help_outline_rounded,
+                          '도움말 / 튜토리얼 다시 보기',
+                          '시작 가이드',
+                          () {
+                            sermonProvider.triggerTutorial();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('홈 화면으로 이동하여 튜토리얼이 시작됩니다! 🕊️'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),

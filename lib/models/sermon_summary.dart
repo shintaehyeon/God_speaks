@@ -16,6 +16,7 @@ class SermonSummary {
   final String keyScriptureTextEng;
   final List<String> applicationPoints;
   final List<String> prayerPoints;
+  final String userComment;
 
   SermonSummary({
     required this.id,
@@ -31,6 +32,7 @@ class SermonSummary {
     this.keyScriptureTextEng = '',
     this.applicationPoints = const [],
     this.prayerPoints = const [],
+    this.userComment = '',
   });
 
   factory SermonSummary.fromFirestore(DocumentSnapshot doc) {
@@ -49,6 +51,7 @@ class SermonSummary {
       keyScriptureTextEng: data['keyScriptureTextEng'] ?? '',
       applicationPoints: List<String>.from(data['applicationPoints'] ?? []),
       prayerPoints: List<String>.from(data['prayerPoints'] ?? []),
+      userComment: data['userComment'] ?? '',
     );
   }
 
@@ -66,6 +69,7 @@ class SermonSummary {
       'keyScriptureTextEng': keyScriptureTextEng,
       'applicationPoints': applicationPoints,
       'prayerPoints': prayerPoints,
+      'userComment': userComment,
     };
   }
 }

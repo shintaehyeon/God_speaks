@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'state/sermon_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'theme.dart';
+import 'edit_summary_sheet.dart';
 import 'models/saved_item.dart';
 import 'dart:async';
 
@@ -287,9 +288,7 @@ class HomePage extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
-                          Icon(
-                            Icons
-                                .contact_support_rounded, // Customized mic logo with people
+                          _CrossIcon(
                             size: 54,
                             color: Colors.white,
                           ),
@@ -696,20 +695,100 @@ class HomePage extends StatelessWidget {
             )),
           ],
 
-          const SizedBox(height: 14),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 10),
-          const Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '지난 요약본에도 자동 저장됨',
-              style: TextStyle(
-                color: HISpeakTheme.purpleMain,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
+        if (provider.todaySermonUserComment.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E38) : const Color(0xFFF5F3FF),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3B2E5C) : const Color(0xFFE5DEFF),
+                width: 1.5,
               ),
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.edit_note_rounded, color: HISpeakTheme.purpleMain, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      '✍️ 나의 묵상 메모',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  provider.todaySermonUserComment,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF475569),
+                    height: 1.45,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ],
+            ),
           ),
+        ],
+
+        const SizedBox(height: 14),
+        Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFF1F5F9)),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton.icon(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => EditSummarySheet(
+                    summaryId: provider.todaySummaryDocId,
+                    initialBulletPoints: provider.todaySermonBulletPoints,
+                    initialApplicationPoints: provider.todaySermonApplicationPoints,
+                    initialPrayerPoints: provider.todaySermonPrayerPoints,
+                    initialUserComment: provider.todaySermonUserComment,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.edit_note_rounded, size: 18),
+              label: const Text(
+                '수정 / 코멘트 추가',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: HISpeakTheme.purpleMain,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+            Text(
+              '지난 요약본에도 자동 저장됨',
+              style: TextStyle(
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ],
+        ),
         ],
       ),
     );
@@ -1124,5 +1203,72 @@ class _ArchivedVersesSliderState extends State<ArchivedVersesSlider> {
         ),
       ),
     );
+  }
+}
+
+class _CrossIcon extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _CrossIcon({
+    Key? key,
+    this.size = 54.0,
+    this.color = Colors.white,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _CrossPainter(color: color),
+      ),
+    );
+  }
+}
+
+class _CrossPainter extends CustomPainter {
+  final Color color;
+
+  _CrossPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..strokeCap = StrokeCap.round;
+
+    final barWidth = size.width * 0.14;
+
+    // Vertical beam of the cross
+    final verticalRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        (size.width - barWidth) / 2,
+        size.height * 0.05,
+        barWidth,
+        size.height * 0.90,
+      ),
+      Radius.circular(barWidth / 2),
+    );
+    canvas.drawRRect(verticalRect, paint);
+
+    // Horizontal beam of the cross
+    final horizontalRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        size.width * 0.15,
+        size.height * 0.28,
+        size.width * 0.70,
+        barWidth,
+      ),
+      Radius.circular(barWidth / 2),
+    );
+    canvas.drawRRect(horizontalRect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CrossPainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }

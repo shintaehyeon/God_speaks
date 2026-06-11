@@ -63,6 +63,11 @@ class SermonProvider extends ChangeNotifier {
   List<String> _todaySermonPrayerPoints = [];
   List<String> get todaySermonPrayerPoints => _todaySermonPrayerPoints;
 
+  String _todaySummaryDocId = "";
+  String get todaySummaryDocId => _todaySummaryDocId;
+  String _todaySermonUserComment = "";
+  String get todaySermonUserComment => _todaySermonUserComment;
+
   // User Preferences from Firestore
   String _displayName = "Alex Johnson";
   String get displayName => _displayName;
@@ -79,8 +84,7 @@ class SermonProvider extends ChangeNotifier {
 
   int _translationCount = 0;
   int get translationCount => _translationCount;
-  bool get isGuestLimitExceeded =>
-      !_userRole.contains("👑") && _translationCount >= 5;
+  bool get isGuestLimitExceeded => false; // Temporarily unlocked to unlimited for guest demo!
 
   // Real-time Translation State
   bool _isRecording = false;
@@ -346,6 +350,8 @@ Sermon Transcript:
     _accumulatedKoreanText = "";
     _rawSpeechTranscriptText = "";
     _lastCommittedSpeechText = "";
+    _todaySummaryDocId = "";
+    _todaySermonUserComment = "";
     _sermonFlowSteps = [
       SermonFlowStep(
         time: "10:15 AM",
@@ -454,32 +460,28 @@ Sermon Transcript:
         notifyListeners();
       });
 
-      // Translation transcription stream simulation
+      // Shorter, bilingual stream texts for extremely quick simulation (4.5s total)
       const streamTexts = [
-        "The Lord is our shepherd, and in His presence, we find everything we need.",
-        " Even in the valley of darkness, we shall fear no evil, for You are with us.",
-        " Your rod and Your staff, they comfort us in times of trials.",
-        " \"And so we must remember that our hope is not built on temporary things...\"",
-        " Faith is built through perseverance. When we face trials, we grow closer to God.",
-        " Today's message focuses on Psalm 23. This scripture provides peace in stormy weather.",
-        " Let us read the next section. Psalm 23 verse 1: 'The Lord is my shepherd, I shall not want.'",
+        "여호와는 나의 목자시니 내게 부족함이 없으리로다. (The Lord is my shepherd, I shall not want.)",
+        " 내가 사망의 음침한 골짜기로 다닐지라도 해를 두려워하지 않을 것은 주께서 나와 함께 하심이라. (Even though I walk through the valley of the shadow of death, I will fear no evil.)",
+        " 주의 지팡이와 막대기가 나를 안위하시나이다. (Your rod and your staff, they comfort me.)",
       ];
 
-      _translationTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-        _simulationSeconds += 4;
-        int index = (_simulationSeconds ~/ 4) - 1;
+      _translationTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+        _simulationSeconds += 2; // Increments by 2 simulated units per tick
+        int index = (_simulationSeconds ~/ 2) - 1;
 
         if (index < streamTexts.length) {
           if (index == 0) {
             _liveTranslationText = streamTexts[0];
           } else {
-            _liveTranslationText += streamTexts[index];
+            _liveTranslationText = "$_liveTranslationText\n\n${streamTexts[index]}";
           }
           _accumulatedKoreanText = _liveTranslationText.trim();
         }
 
-        // Add scripture flow at 12 seconds
-        if (_simulationSeconds == 12) {
+        // Add scripture flow at tick 2 (after 3 seconds)
+        if (_simulationSeconds == 4) {
           _sermonFlowSteps.add(
             SermonFlowStep(
               time: "12:45 PM",
@@ -490,8 +492,8 @@ Sermon Transcript:
           );
         }
 
-        // Add concluding flow at 24 seconds
-        if (_simulationSeconds == 24) {
+        // Add concluding flow at tick 3 (after 4.5 seconds)
+        if (_simulationSeconds == 6) {
           _sermonFlowSteps.add(
             SermonFlowStep(
               time: "진행 중...",
@@ -779,7 +781,7 @@ $translatedTranscript
       notifyListeners();
 
       try {
-        await _firestore.collection('summaries').add({
+        final docRef = await _firestore.collection('summaries').add({
           'title': title,
           'date': DateTime.now().toString().substring(0, 10),
           'category': category,
@@ -795,7 +797,11 @@ $translatedTranscript
           'translatedTranscript': translatedTranscript,
           'userId': _user?.uid,
           'timestamp': FieldValue.serverTimestamp(),
+          'userComment': '',
         });
+        _todaySummaryDocId = docRef.id;
+        _todaySermonUserComment = "";
+        notifyListeners();
       } catch (e) {
         print("Firestore summary save error: $e");
       }
@@ -810,6 +816,85 @@ $translatedTranscript
     } catch (e) {
       print("Error deleting summary: $e");
     }
+  }
+
+  Future<void> updateSummary({
+    required String id,
+    required List<String> bulletPoints,
+    required List<String> applicationPoints,
+    required List<String> prayerPoints,
+    String? userComment,
+  }) async {
+    try {
+      final Map<String, dynamic> updates = {
+        'bulletPoints': bulletPoints,
+        'applicationPoints': applicationPoints,
+        'prayerPoints': prayerPoints,
+      };
+      if (userComment != null) {
+        updates['userComment'] = userComment;
+      }
+
+      await _firestore.collection('summaries').doc(id).update(updates);
+
+      // If this is today's summary, update the local variables too
+      if (id == _todaySummaryDocId) {
+        _todaySermonBulletPoints = bulletPoints;
+        _todaySermonApplicationPoints = applicationPoints;
+        _todaySermonPrayerPoints = prayerPoints;
+        if (userComment != null) {
+          _todaySermonUserComment = userComment;
+        }
+
+        // Rebuild todaySermonSummary markdown
+        _todaySermonSummary = _formatSummaryMarkdown(
+          _todaySermonTitle.isNotEmpty ? _todaySermonTitle : '오늘의 실시간 STT 설교 요약',
+          _todaySermonKeyScripture,
+          _todaySermonKeyScriptureTextKor,
+          _todaySermonKeyScriptureTextEng,
+          bulletPoints,
+          applicationPoints,
+          prayerPoints,
+        );
+      }
+      notifyListeners();
+    } catch (e) {
+      print("Error updating summary in provider: $e");
+    }
+  }
+
+  bool _showTutorial = false;
+  bool get showTutorial => _showTutorial;
+  int _tutorialStep = 0;
+  int get tutorialStep => _tutorialStep;
+
+  void triggerTutorial() {
+    _showTutorial = true;
+    _tutorialStep = 0;
+    notifyListeners();
+  }
+
+  void completeTutorial() {
+    _showTutorial = false;
+    _tutorialStep = 0;
+    notifyListeners();
+  }
+
+  void nextTutorialStep() {
+    _tutorialStep++;
+    notifyListeners();
+  }
+
+  void previousTutorialStep() {
+    if (_tutorialStep > 0) {
+      _tutorialStep--;
+      notifyListeners();
+    }
+  }
+
+  void setTutorialStep(int step) {
+    _tutorialStep = step;
+    notifyListeners();
   }
 
   String _formatSummaryMarkdown(
@@ -1056,6 +1141,7 @@ $translatedTranscript
     notifyListeners();
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
+      _showTutorial = true; // Trigger tutorial on login
       _isLoading = false;
       notifyListeners();
       return true;
@@ -1091,6 +1177,7 @@ $translatedTranscript
           'translationCount': 0,
         });
       }
+      _showTutorial = true; // Trigger tutorial on sign up
       _isLoading = false;
       notifyListeners();
       return true;
@@ -1145,6 +1232,7 @@ $translatedTranscript
         }
         await _loadUserProfile();
       }
+      _showTutorial = true; // Trigger tutorial on login
       _isLoading = false;
       notifyListeners();
       return true;
@@ -1187,6 +1275,7 @@ $translatedTranscript
           });
           await _loadUserProfile();
         }
+        _showTutorial = true; // Trigger tutorial on login
         _isLoading = false;
         notifyListeners();
         return true;

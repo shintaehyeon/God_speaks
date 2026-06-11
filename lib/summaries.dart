@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 import 'state/sermon_provider.dart';
 import 'models/sermon_summary.dart';
 import 'theme.dart';
+import 'edit_summary_sheet.dart';
 
 class SummariesPage extends StatefulWidget {
   const SummariesPage({Key? key}) : super(key: key);
@@ -632,86 +633,134 @@ class _SummariesPageState extends State<SummariesPage> {
 
                   const SizedBox(height: 8),
 
-                  // Bottom Action Buttons
-                  Row(
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Playing sermon audio... (Prototype)',
-                              ),
-                              duration: Duration(seconds: 1),
+                    if (s.userComment.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E1E38) : const Color(0xFFF5F3FF),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF3B2E5C) : const Color(0xFFE5DEFF),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.edit_note_rounded, color: HISpeakTheme.purpleMain, size: 18),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '✍️ 나의 묵상 메모',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.play_circle_fill_rounded,
-                          size: 16,
-                        ),
-                        label: const Text('Listen'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: HISpeakTheme.bgLavender,
-                          foregroundColor: HISpeakTheme.purpleMain,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                            const SizedBox(height: 8),
+                            Text(
+                              s.userComment,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF475569),
+                                height: 1.45,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      // Premium AI QA button
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          if (isPremium) {
-                            _showAIChatBottomSheet(context, s, sermonProvider);
-                          } else {
-                            _showPremiumUpgradeDialog(context);
-                          }
-                        },
-                        icon: Icon(
-                          isPremium
-                              ? Icons.psychology_rounded
-                              : Icons.lock_rounded,
-                          size: 16,
+                    ],
+
+                    const SizedBox(height: 16),
+
+                    // Bottom Action Buttons
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Playing sermon audio... (Prototype)',
+                                ),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.play_circle_fill_rounded,
+                            size: 16,
+                          ),
+                          label: const Text('Listen'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: HISpeakTheme.bgLavender,
+                            foregroundColor: HISpeakTheme.purpleMain,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
-                        label: Text(isPremium ? 'AI 질문' : 'AI 질문 🔒'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isPremium
-                              ? HISpeakTheme.bgLavender
-                              : const Color(0xFFFEF2F2),
-                          foregroundColor: isPremium
-                              ? HISpeakTheme.purpleMain
-                              : const Color(0xFFEF4444),
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                        // Premium AI QA button
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            if (isPremium) {
+                              _showAIChatBottomSheet(context, s, sermonProvider);
+                            } else {
+                              _showPremiumUpgradeDialog(context);
+                            }
+                          },
+                          icon: Icon(
+                            isPremium
+                                ? Icons.psychology_rounded
+                                : Icons.lock_rounded,
+                            size: 16,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                          label: Text(isPremium ? 'AI 질문' : 'AI 질문 🔒'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isPremium
+                                ? HISpeakTheme.bgLavender
+                                : const Color(0xFFFEF2F2),
+                            foregroundColor: isPremium
+                                ? HISpeakTheme.purpleMain
+                                : const Color(0xFFEF4444),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          if (isPremium) {
-                            final shareText =
-                                """
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            if (isPremium) {
+                              final shareText =
+                                  """
 🌟 *HISpeak Sermon Summary Report* 🌟
 📅 Date: ${s.date}
 🏷️ Topic: ${s.category}
@@ -726,59 +775,99 @@ ${s.takeaway}
 
 Generated dynamically by HISpeak.
 """;
-                            // Copy to clipboard
-                            Clipboard.setData(ClipboardData(text: shareText));
-                            // Trigger native share sheet using share_plus.
-                            SharePlus.instance.share(
-                              ShareParams(
-                                text: shareText,
-                                subject: 'HISpeak Sermon Summary',
-                              ),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  '📋 설교 요약본 리포트가 클립보드에 복사되고 공유 창이 열렸습니다!',
+                              // Copy to clipboard
+                              Clipboard.setData(ClipboardData(text: shareText));
+                              // Trigger native share sheet using share_plus.
+                              SharePlus.instance.share(
+                                ShareParams(
+                                  text: shareText,
+                                  subject: 'HISpeak Sermon Summary',
                                 ),
-                                duration: Duration(seconds: 2),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    '📋 설교 요약본 리포트가 클립보드에 복사되고 공유 창이 열렸습니다!',
+                                  ),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            } else {
+                              _showPremiumUpgradeDialog(context);
+                            }
+                          },
+                          icon: Icon(
+                            isPremium ? Icons.share_rounded : Icons.lock_rounded,
+                            size: 14,
+                            color: isPremium
+                                ? const Color(0xFF64748B)
+                                : const Color(0xFFEF4444),
+                          ),
+                          label: Text(isPremium ? '공유' : '공유 🔒'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: isPremium
+                                ? const Color(0xFF64748B)
+                                : const Color(0xFFEF4444),
+                            side: BorderSide(
+                              color: isPremium
+                                  ? const Color(0xFFCBD5E1)
+                                  : const Color(0xFFFCA5A5),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        // Edit Summary Button
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => EditSummarySheet(
+                                summaryId: s.id,
+                                initialBulletPoints: s.bulletPoints,
+                                initialApplicationPoints: s.applicationPoints,
+                                initialPrayerPoints: s.prayerPoints,
+                                initialUserComment: s.userComment,
                               ),
                             );
-                          } else {
-                            _showPremiumUpgradeDialog(context);
-                          }
-                        },
-                        icon: Icon(
-                          isPremium ? Icons.share_rounded : Icons.lock_rounded,
-                          size: 14,
-                          color: isPremium
-                              ? const Color(0xFF64748B)
-                              : const Color(0xFFEF4444),
-                        ),
-                        label: Text(isPremium ? '공유' : '공유 🔒'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: isPremium
-                              ? const Color(0xFF64748B)
-                              : const Color(0xFFEF4444),
-                          side: BorderSide(
-                            color: isPremium
-                                ? const Color(0xFFCBD5E1)
-                                : const Color(0xFFFCA5A5),
+                          },
+                          icon: const Icon(
+                            Icons.edit_note_rounded,
+                            size: 16,
+                            color: HISpeakTheme.purpleMain,
                           ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                          label: const Text('수정'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: HISpeakTheme.purpleMain,
+                            side: const BorderSide(
+                              color: HISpeakTheme.lightPurple,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                 ],
               ),
             ),
