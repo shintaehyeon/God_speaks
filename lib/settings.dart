@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'open_source_page.dart';
 import 'state/sermon_provider.dart';
 import 'theme.dart';
@@ -62,32 +64,46 @@ class SettingsPage extends StatelessWidget {
                   Center(
                     child: Column(
                       children: [
-                        Container(
-                          width: 108,
-                          height: 108,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFF8B5CF6),
-                                Color(0xFF6D28D9),
+                        GestureDetector(
+                          onTap: () => _pickImage(context, sermonProvider),
+                          child: Container(
+                            width: 108,
+                            height: 108,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: sermonProvider.profileImagePath == null
+                                  ? const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xFF8B5CF6),
+                                        Color(0xFF6D28D9),
+                                      ],
+                                    )
+                                  : null,
+                              image: sermonProvider.profileImagePath != null &&
+                                      File(sermonProvider.profileImagePath!).existsSync()
+                                  ? DecorationImage(
+                                      image: FileImage(File(sermonProvider.profileImagePath!)),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
+                                )
                               ],
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              )
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.add_rounded, // Sleek Minimal Cross Emblem
-                            size: 60,
-                            color: Colors.white,
+                            alignment: Alignment.center,
+                            child: sermonProvider.profileImagePath == null
+                                ? const Icon(
+                                    Icons.add_rounded, // Sleek Minimal Cross Emblem
+                                    size: 60,
+                                    color: Colors.white,
+                                  )
+                                : const SizedBox.shrink(),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -574,5 +590,28 @@ class SettingsPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _pickImage(BuildContext context, SermonProvider provider) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        await provider.updateUserPreference(profileImagePath: image.path);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile image updated! 📸')),
+        );
+      }
+    } catch (e) {
+      print("Error picking image: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking image: $e')),
+      );
+    }
   }
 }

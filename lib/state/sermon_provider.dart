@@ -81,6 +81,10 @@ class SermonProvider extends ChangeNotifier {
   bool get pushNotifications => _pushNotifications;
   String _preferredBibleVersion = "NIV";
   String get preferredBibleVersion => _preferredBibleVersion;
+  String? _profileImagePath;
+  String? get profileImagePath => _profileImagePath;
+  bool _hasSeenTutorial = false;
+  bool get hasSeenTutorial => _hasSeenTutorial;
 
   int _translationCount = 0;
   int get translationCount => _translationCount;
@@ -247,6 +251,13 @@ Sermon Transcript:
         _preferredBibleVersion = data['preferredBibleVersion'] ?? "NIV";
         _useRealAI = data['useRealAI'] ?? false;
         _translationCount = data['translationCount'] ?? 0;
+        _profileImagePath = data['profileImagePath'];
+        _hasSeenTutorial = data['hasSeenTutorial'] ?? false;
+        if (!_hasSeenTutorial) {
+          _showTutorial = true; // Trigger tutorial only if never seen
+        } else {
+          _showTutorial = false;
+        }
       } else {
         // Create user document with defaults
         await _firestore.collection('users').doc(_user!.uid).set({
@@ -258,10 +269,13 @@ Sermon Transcript:
           'preferredBibleVersion': _preferredBibleVersion,
           'useRealAI': _useRealAI,
           'translationCount': 0,
+          'profileImagePath': null,
+          'hasSeenTutorial': false,
           'email': _user!.email,
           'createdAt': FieldValue.serverTimestamp(),
         });
         _translationCount = 0;
+        _showTutorial = true; // New users always get the tutorial
       }
       notifyListeners();
     } catch (e) {
@@ -276,6 +290,8 @@ Sermon Transcript:
     String? preferredBibleVersion,
     String? displayName,
     bool? useRealAI,
+    String? profileImagePath,
+    bool? hasSeenTutorial,
   }) async {
     if (_user == null) return;
     try {
@@ -303,6 +319,14 @@ Sermon Transcript:
       if (useRealAI != null) {
         _useRealAI = useRealAI;
         updates['useRealAI'] = useRealAI;
+      }
+      if (profileImagePath != null) {
+        _profileImagePath = profileImagePath;
+        updates['profileImagePath'] = profileImagePath;
+      }
+      if (hasSeenTutorial != null) {
+        _hasSeenTutorial = hasSeenTutorial;
+        updates['hasSeenTutorial'] = hasSeenTutorial;
       }
 
       await _firestore.collection('users').doc(_user!.uid).update(updates);
@@ -877,6 +901,7 @@ $translatedTranscript
   void completeTutorial() {
     _showTutorial = false;
     _tutorialStep = 0;
+    updateUserPreference(hasSeenTutorial: true);
     notifyListeners();
   }
 
@@ -1141,7 +1166,6 @@ $translatedTranscript
     notifyListeners();
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
-      _showTutorial = true; // Trigger tutorial on login
       _isLoading = false;
       notifyListeners();
       return true;
@@ -1175,9 +1199,9 @@ $translatedTranscript
           'createdAt': FieldValue.serverTimestamp(),
           'useRealAI': false, // defaults to false (Guide/Tutorial mode)
           'translationCount': 0,
+          'hasSeenTutorial': false,
         });
       }
-      _showTutorial = true; // Trigger tutorial on sign up
       _isLoading = false;
       notifyListeners();
       return true;
@@ -1228,11 +1252,11 @@ $translatedTranscript
             'createdAt': FieldValue.serverTimestamp(),
             'useRealAI': true, // Auto-enable real AI for premium
             'translationCount': 0,
+            'hasSeenTutorial': false,
           });
         }
         await _loadUserProfile();
       }
-      _showTutorial = true; // Trigger tutorial on login
       _isLoading = false;
       notifyListeners();
       return true;
@@ -1272,10 +1296,10 @@ $translatedTranscript
             'createdAt': FieldValue.serverTimestamp(),
             'useRealAI': true,
             'translationCount': 0,
+            'hasSeenTutorial': false,
           });
           await _loadUserProfile();
         }
-        _showTutorial = true; // Trigger tutorial on login
         _isLoading = false;
         notifyListeners();
         return true;
