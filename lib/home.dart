@@ -20,35 +20,7 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: BoxDecoration(
-                color: sermonProvider.userRole.contains("👑")
-                    ? const Color(0xFFFEF3C7)
-                    : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: sermonProvider.userRole.contains("👑")
-                      ? const Color(0xFFF59E0B)
-                      : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-                ),
-              ),
-              child: Text(
-                sermonProvider.userRole.contains("👑") ? '👑 Premium' : 'Guest',
-                style: TextStyle(
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                  color: sermonProvider.userRole.contains("👑")
-                      ? const Color(0xFFB45309)
-                      : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
-                ),
-              ),
-            ),
-          ),
-        ),
+        leading: const SizedBox.shrink(),
         leadingWidth: 72,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -152,7 +124,11 @@ class HomePage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                     // Beautiful illustration slider using local premium asset & archived items
-                    ArchivedVersesSlider(items: sermonProvider.archiveItems),
+                    ArchivedVersesSlider(
+                      items: sermonProvider.archiveItems
+                          .where((item) => sermonProvider.savedItemIds.contains(item.id))
+                          .toList(),
+                    ),
                     const SizedBox(height: 16),
                     // 1. Re-branded Tutorial Mode Banner
                     GestureDetector(

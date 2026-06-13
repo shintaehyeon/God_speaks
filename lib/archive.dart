@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'state/sermon_provider.dart';
 import 'models/saved_item.dart';
 import 'theme.dart';
@@ -13,6 +15,9 @@ class ArchivePage extends StatefulWidget {
 
 class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isSearching = false;
+  String _searchText = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -23,6 +28,7 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -31,9 +37,22 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
     final sermonProvider = Provider.of<SermonProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Filter items based on type
-    final verses = sermonProvider.archiveItems.where((item) => item.type == 'verse').toList();
-    final quotes = sermonProvider.archiveItems.where((item) => item.type == 'quote').toList();
+    // Filter items based on type and search query
+    final verses = sermonProvider.archiveItems.where((item) {
+      if (item.type != 'verse') return false;
+      if (_searchText.isEmpty) return true;
+      return item.title.toLowerCase().contains(_searchText.toLowerCase()) ||
+          item.content.toLowerCase().contains(_searchText.toLowerCase()) ||
+          item.authorOrVersion.toLowerCase().contains(_searchText.toLowerCase());
+    }).toList();
+
+    final quotes = sermonProvider.archiveItems.where((item) {
+      if (item.type != 'quote') return false;
+      if (_searchText.isEmpty) return true;
+      return item.title.toLowerCase().contains(_searchText.toLowerCase()) ||
+          item.content.toLowerCase().contains(_searchText.toLowerCase()) ||
+          item.authorOrVersion.toLowerCase().contains(_searchText.toLowerCase());
+    }).toList();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -53,25 +72,52 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                   Navigator.of(context).pop();
                 },
               ),
-              title: Text(
-                'Sermon Archive',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
-                ),
-              ),
+              title: _isSearching
+                  ? TextField(
+                      controller: _searchController,
+                      autofocus: true,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        fontSize: 16,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search verses or quotes...',
+                        hintStyle: TextStyle(
+                          color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                        ),
+                        border: InputBorder.none,
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          _searchText = val;
+                        });
+                      },
+                    )
+                  : Text(
+                      'Sermon Archive',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      ),
+                    ),
               actions: [
                 IconButton(
                   icon: Icon(
-                    Icons.search_rounded,
+                    _isSearching ? Icons.close_rounded : Icons.search_rounded,
                     size: 22,
                     color: isDark ? Colors.white : const Color(0xFF1E293B),
                   ),
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Search archive (Prototype)'), duration: Duration(milliseconds: 500)),
-                    );
+                    setState(() {
+                      if (_isSearching) {
+                        _isSearching = false;
+                        _searchText = '';
+                        _searchController.clear();
+                      } else {
+                        _isSearching = true;
+                      }
+                    });
                   },
                 ),
               ],
@@ -273,8 +319,19 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                               IconButton(
                                 icon: Icon(Icons.share_rounded, size: 18, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                                 onPressed: () {
+                                  final text = "${item.content}\n\n— ${item.authorOrVersion}";
+                                  Clipboard.setData(ClipboardData(text: text));
+                                  SharePlus.instance.share(
+                                    ShareParams(
+                                      text: text,
+                                      subject: 'Sermon Verse',
+                                    ),
+                                  );
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Copied verse link!'), duration: Duration(seconds: 1)),
+                                    const SnackBar(
+                                      content: Text('📋 성경 구절이 복사되고 공유 창이 열렸습니다!'),
+                                      duration: Duration(seconds: 1),
+                                    ),
                                   );
                                 },
                               ),
@@ -370,8 +427,19 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                         IconButton(
                           icon: Icon(Icons.share_rounded, size: 18, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           onPressed: () {
+                            final text = "${item.content}\n\n— ${item.authorOrVersion}";
+                            Clipboard.setData(ClipboardData(text: text));
+                            SharePlus.instance.share(
+                              ShareParams(
+                                text: text,
+                                subject: 'Sermon Key Quote',
+                              ),
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Copied quote!'), duration: Duration(seconds: 1)),
+                              const SnackBar(
+                                content: Text('📋 설교 핵심 문구가 복사되고 공유 창이 열렸습니다!'),
+                                duration: Duration(seconds: 1),
+                              ),
                             );
                           },
                         ),

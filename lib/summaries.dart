@@ -44,17 +44,7 @@ class _SummariesPageState extends State<SummariesPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Menu clicked (Prototype)'),
-                duration: Duration(milliseconds: 500),
-              ),
-            );
-          },
-        ),
+
         title: const Text(
           'Smart Summaries',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -65,12 +55,7 @@ class _SummariesPageState extends State<SummariesPage> {
             child: GestureDetector(
               onTap: () {
                 // Focus profile setting page tab
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Swipe to settings tab to view profile'),
-                    duration: Duration(seconds: 1),
-                  ),
-                );
+                sermonProvider.setNavigationIndex(4);
               },
               child: Container(
                 width: 32,
@@ -270,7 +255,7 @@ class _SummariesPageState extends State<SummariesPage> {
   Widget _buildSermonCard(SermonSummary s, bool isExpanded) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sermonProvider = Provider.of<SermonProvider>(context);
-    final isPremium = sermonProvider.userRole.contains("👑");
+    final isPremium = true;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Dismissible(
@@ -686,76 +671,6 @@ class _SummariesPageState extends State<SummariesPage> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Playing sermon audio... (Prototype)',
-                                ),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.play_circle_fill_rounded,
-                            size: 16,
-                          ),
-                          label: const Text('Listen'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: HISpeakTheme.bgLavender,
-                            foregroundColor: HISpeakTheme.purpleMain,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            textStyle: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        // Premium AI QA button
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            if (isPremium) {
-                              _showAIChatBottomSheet(context, s, sermonProvider);
-                            } else {
-                              _showPremiumUpgradeDialog(context);
-                            }
-                          },
-                          icon: Icon(
-                            isPremium
-                                ? Icons.psychology_rounded
-                                : Icons.lock_rounded,
-                            size: 16,
-                          ),
-                          label: Text(isPremium ? 'AI 질문' : 'AI 질문 🔒'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isPremium
-                                ? HISpeakTheme.bgLavender
-                                : const Color(0xFFFEF2F2),
-                            foregroundColor: isPremium
-                                ? HISpeakTheme.purpleMain
-                                : const Color(0xFFEF4444),
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            textStyle: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
                         OutlinedButton.icon(
                           onPressed: () {
                             if (isPremium) {

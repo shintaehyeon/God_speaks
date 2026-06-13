@@ -371,42 +371,10 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                                 ),
                               ],
                             ),
-                            
-                            // Floating Bookmark/Save icon
-                            Positioned(
-                              right: 0,
-                              bottom: 4,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x15000000),
-                                      blurRadius: 10,
-                                      offset: Offset(0, 4),
-                                    )
-                                  ]
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.bookmark_outline_rounded,
-                                    color: HISpeakTheme.purpleMain,
-                                    size: 24,
-                                  ),
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('구절이 보관함에 임시 추가되었습니다.'),
-                                        duration: Duration(seconds: 1),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
+                             
+                             // Floating Bookmark/Save icon
+                           ],
+                         ),
                       ),
                     ),
                   ),

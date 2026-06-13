@@ -40,12 +40,17 @@ class _SplashPageState extends State<SplashPage>
     _controller.forward();
 
     // 2. Timer-based Routing Transition to main/login screen
-    Timer(const Duration(milliseconds: 2800), () {
+    Timer(const Duration(milliseconds: 2800), () async {
       if (mounted) {
         final sermonProvider = Provider.of<SermonProvider>(
           context,
           listen: false,
         );
+        
+        // [VIDEO RECORDING MODE] Force sign out on every startup 
+        // so the login screen and animations always appear!
+        await sermonProvider.signOut();
+        
         if (sermonProvider.user != null) {
           Navigator.pushReplacementNamed(context, '/navigation');
         } else {

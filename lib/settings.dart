@@ -41,17 +41,7 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               actions: [
-                IconButton(
-                  icon: Icon(
-                    Icons.more_vert_rounded,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                  ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('More settings (Prototype)'), duration: Duration(milliseconds: 500)),
-                    );
-                  },
-                ),
+
               ],
             ),
             body: SingleChildScrollView(
@@ -117,7 +107,7 @@ class SettingsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          sermonProvider.userRole,
+                          '성도',
                           style: const TextStyle(
                             fontSize: 13,
                             color: Color(0xFF94A3B8),
@@ -161,12 +151,17 @@ class SettingsPage extends StatelessWidget {
                           color: isDark ? Colors.white : const Color(0xFF1E293B),
                         ),
                       ),
-                      Text(
-                        'View All',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: HISpeakTheme.purpleMain,
+                      GestureDetector(
+                        onTap: () {
+                          sermonProvider.setNavigationIndex(2); // 지난 요약본 탭으로 이동
+                        },
+                        child: const Text(
+                          'View All',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: HISpeakTheme.purpleMain,
+                          ),
                         ),
                       ),
                     ],
@@ -174,20 +169,26 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildActivityCard(
                     context,
-                    Icons.play_circle_outline_rounded,
-                    'Sunday Service: Hope & Renewal',
-                    'Watched online • 2 days ago',
+                    Icons.article_rounded,
+                    '선한 목자의 인도하심 (The Good Shepherd)',
+                    '2026-06-11 • FAITH • 요약 완료',
                     isDark ? const Color(0xFF1E1B4B) : const Color(0xFFF5F3FF),
                     HISpeakTheme.purpleMain,
+                    onTap: () {
+                      sermonProvider.setNavigationIndex(2); // 지난 요약본 탭으로 이동
+                    },
                   ),
                   const SizedBox(height: 10),
                   _buildActivityCard(
                     context,
-                    Icons.menu_book_rounded,
-                    'Morning Devotional: Psalms 23',
-                    'Completed reading • 3 days ago',
+                    Icons.mic_none_rounded,
+                    '오늘의 실시간 STT 설교 요약',
+                    '2026-06-08 • LIVE STT • 요약 완료',
                     isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                     isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                    onTap: () {
+                      sermonProvider.setNavigationIndex(2); // 지난 요약본 탭으로 이동
+                    },
                   ),
 
                   const SizedBox(height: 32),
@@ -236,16 +237,6 @@ class SettingsPage extends StatelessWidget {
                         const Divider(height: 1, color: Color(0xFFF1F5F9)),
                         _buildPreferenceToggleRow(
                           context,
-                          Icons.notifications_none_rounded,
-                          'Push Notifications',
-                          sermonProvider.pushNotifications,
-                          (val) {
-                            sermonProvider.updateUserPreference(pushNotifications: val);
-                          },
-                        ),
-                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                        _buildPreferenceToggleRow(
-                          context,
                           Icons.psychology_outlined,
                           '실시간 AI 연동 모드 (Gemini & STT)',
                           sermonProvider.useRealAI,
@@ -260,21 +251,6 @@ class SettingsPage extends StatelessWidget {
                           'Preferred Bible Version',
                           sermonProvider.preferredBibleVersion,
                           () => _showBibleVersionDialog(context, sermonProvider),
-                        ),
-                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                        _buildPreferenceOptionRow(
-                          context,
-                          Icons.integration_instructions_outlined,
-                          'Open Source Libraries',
-                          '15 packages',
-                          () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const OpenSourcePage(),
-                              ),
-                            );
-                          },
                         ),
                         const Divider(height: 1, color: Color(0xFFF1F5F9)),
                         _buildPreferenceOptionRow(
@@ -334,55 +310,60 @@ class SettingsPage extends StatelessWidget {
     String subtitle,
     Color bgIconColor,
     Color iconColor,
+    {VoidCallback? onTap}
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B).withOpacity(0.85) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFF1F5F9),
-          width: 1.5,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: bgIconColor,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Icon(icon, color: iconColor, size: 20),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B).withOpacity(0.85) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFF1F5F9),
+            width: 1.5,
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                  ),
-                ),
-              ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: bgIconColor,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, color: iconColor, size: 20),
             ),
-          )
-        ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -582,6 +563,53 @@ class SettingsPage extends StatelessWidget {
             TextButton(
               onPressed: () {
                 provider.updateUserPreference(displayName: controller.text.trim());
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showGeminiKeyDialog(BuildContext context, SermonProvider provider) {
+    final controller = TextEditingController(text: provider.customGeminiApiKey);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Gemini API Key 설정'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Google AI Studio에서 발급받은 본인의 Gemini API Key를 입력하시면, 무료 쿼터 제한 없이 실시간 음성 번역 및 설교 요약 기능을 제한 없이 이용하실 수 있습니다.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'Gemini API Key',
+                  hintText: 'AIzaSy...',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                provider.updateUserPreference(geminiApiKey: controller.text.trim());
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Gemini API Key가 안전하게 저장되었습니다! 🔑')),
+                );
                 Navigator.pop(context);
               },
               child: const Text('Save'),

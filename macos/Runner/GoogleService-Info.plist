@@ -26,5 +26,7 @@
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:241632718216:ios:71ed0f3ee6c09a3e635e3d</string>
+	<key>DATABASE_URL</key>
+	<string>https://god-speak-ai-default-rtdb.firebaseio.com</string>
 </dict>
 </plist>

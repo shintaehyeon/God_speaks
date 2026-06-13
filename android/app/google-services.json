@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "241632718216",
+    "firebase_url": "https://god-speak-ai-default-rtdb.firebaseio.com",
     "project_id": "god-speak-ai",
     "storage_bucket": "god-speak-ai.firebasestorage.app"
   },

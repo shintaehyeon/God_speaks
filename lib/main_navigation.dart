@@ -33,6 +33,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     final isDark = theme.brightness == Brightness.dark;
     final sermonProvider = Provider.of<SermonProvider>(context);
 
+    // Sync state index with provider index
+    _currentIndex = sermonProvider.currentNavigationIndex;
+
     // Sync tab based on provider.tutorialStep
     if (sermonProvider.showTutorial) {
       int targetIndex = _currentIndex;
@@ -50,9 +53,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       if (_currentIndex != targetIndex) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            setState(() {
-              _currentIndex = targetIndex;
-            });
+            sermonProvider.setNavigationIndex(targetIndex);
           }
         });
       }
@@ -74,9 +75,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             child: BottomNavigationBar(
               currentIndex: _currentIndex,
               onTap: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
+                sermonProvider.setNavigationIndex(index);
               },
               type: BottomNavigationBarType.fixed,
               backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
@@ -596,14 +595,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                                 Navigator.pushNamed(context, '/live');
                                 provider.setTutorialStep(5);
                               } else if (provider.tutorialStep == 7) {
-                                setState(() {
-                                  _currentIndex = 0;
-                                });
+                                provider.setNavigationIndex(0);
                                 provider.previousTutorialStep();
                               } else if (provider.tutorialStep == 8) {
-                                setState(() {
-                                  _currentIndex = 1;
-                                });
+                                provider.setNavigationIndex(1);
                                 provider.previousTutorialStep();
                               } else {
                                 provider.previousTutorialStep();
@@ -668,14 +663,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                                   }
                                   Navigator.pushNamed(context, '/live');
                                 } else if (provider.tutorialStep == 6) {
-                                  setState(() {
-                                    _currentIndex = 1;
-                                  });
+                                  provider.setNavigationIndex(1);
                                   provider.nextTutorialStep();
                                 } else if (provider.tutorialStep == 7) {
-                                  setState(() {
-                                    _currentIndex = 2;
-                                  });
+                                  provider.setNavigationIndex(2);
                                   provider.nextTutorialStep();
                                 } else {
                                   provider.nextTutorialStep();

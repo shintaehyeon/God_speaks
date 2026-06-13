@@ -1,9 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'models/bible.dart';
 import 'services/bible_repository.dart';
+import 'state/sermon_provider.dart';
 
 class BiblePage extends StatefulWidget {
   const BiblePage({super.key});
@@ -446,6 +448,9 @@ class _ChapterVerseList extends StatelessWidget {
 
         final verseIndex = index - 1;
         return _VerseTile(
+          bookName: koreanBook.name,
+          englishBookName: englishBook.name,
+          chapterNumber: koreanChapter.number,
           verseNumber: koreanChapter.verses[verseIndex].verse,
           koreanText: koreanChapter.verses[verseIndex].text,
           englishText: englishChapter.verses[verseIndex].text,
@@ -568,12 +573,18 @@ class _ChapterHeader extends StatelessWidget {
 
 class _VerseTile extends StatelessWidget {
   const _VerseTile({
+    required this.bookName,
+    required this.englishBookName,
+    required this.chapterNumber,
     required this.verseNumber,
     required this.koreanText,
     required this.englishText,
     required this.viewMode,
   });
 
+  final String bookName;
+  final String englishBookName;
+  final int chapterNumber;
   final int verseNumber;
   final String koreanText;
   final String englishText;
@@ -581,7 +592,43 @@ class _VerseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<SermonProvider>(context, listen: false);
+
+    void _handleSave() {
+      final title = viewMode == BibleViewMode.english
+          ? '$englishBookName $chapterNumber:$verseNumber'
+          : '$bookName $chapterNumber:$verseNumber';
+
+      String content = '';
+      String version = '';
+      if (viewMode == BibleViewMode.korean) {
+        content = koreanText;
+        version = '개역개정';
+      } else if (viewMode == BibleViewMode.english) {
+        content = englishText;
+        version = 'ESV Version';
+      } else {
+        content = '$koreanText\n$englishText';
+        version = '개역개정 / ESV';
+      }
+
+      provider.saveBibleVerse(
+        title: title,
+        content: content,
+        version: version,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('🕊️ $title 구절이 보관함(Bible Verses)에 저장되었습니다!'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
+
     return _VerseSurface(
+      onDoubleTap: _handleSave,
+      onLongPress: _handleSave,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -652,10 +699,17 @@ class _SearchResultTile extends StatelessWidget {
 }
 
 class _VerseSurface extends StatelessWidget {
-  const _VerseSurface({required this.child, this.onTap});
+  const _VerseSurface({
+    required this.child,
+    this.onTap,
+    this.onDoubleTap,
+    this.onLongPress,
+  });
 
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onDoubleTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -673,7 +727,7 @@ class _VerseSurface extends StatelessWidget {
       child: child,
     );
 
-    if (onTap == null) {
+    if (onTap == null && onDoubleTap == null && onLongPress == null) {
       return surface;
     }
 
@@ -682,6 +736,8 @@ class _VerseSurface extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
+        onDoubleTap: onDoubleTap,
+        onLongPress: onLongPress,
         child: surface,
       ),
     );

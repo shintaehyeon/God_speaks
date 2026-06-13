@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
           ],
         ),
         content: const Text(
-          "iOS 시뮬레이터 환경의 안정성을 위해 소셜 로그인 API 대신 이메일 가입/로그인을 사용해 주십시오.\n\n이메일 가입 시 이름에 'guest'를 포함하여 가입하면 무료 계정, 그 외 성함을 입력하시면 👑 프리미엄 계정이 즉시 생성됩니다!",
+          "iOS 시뮬레이터 환경의 안정성을 위해 소셜 로그인 API 대신 이메일 가입/로그인을 사용해 주십시오.",
           style: TextStyle(height: 1.5, fontSize: 14, color: Color(0xFF475569)),
         ),
         actions: [
@@ -102,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
             additionalSignupFields: [
               UserFormField(
                 keyName: 'name',
-                displayName: '이름 (guest 포함:무료 / 실명:👑프리미엄)',
+                displayName: '이름 (Name)',
                 icon: const Icon(Icons.person_outline_rounded),
                 defaultValue: '',
               ),
@@ -112,8 +112,16 @@ class _LoginPageState extends State<LoginPage> {
                 icon: FontAwesomeIcons.google,
                 label: '구글 계정',
                 callback: () async {
-                  _showGoogleSafeModeDialog();
-                  return '시뮬레이터 안전 모드 (이메일로 가입해 주세요)';
+                  final sermonProvider = Provider.of<SermonProvider>(
+                    context,
+                    listen: false,
+                  );
+                  bool success = await sermonProvider.signInWithGoogle();
+                  if (success) {
+                    return null;
+                  } else {
+                    return '구글 로그인 실패 (Firebase 연동 오류)';
+                  }
                 },
               ),
               LoginProvider(
@@ -124,11 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                     context,
                     listen: false,
                   );
-                  bool success = await sermonProvider.signUp(
-                    "guest_${DateTime.now().millisecondsSinceEpoch}@sermon.com",
-                    "guest12345",
-                    "Guest User",
-                  );
+                  bool success = await sermonProvider.fastGuestSignIn();
                   if (success) {
                     return null;
                   } else {
@@ -148,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
               recoverPasswordIntro: '이메일을 입력하시면 비밀번호 복구 가이드를 보냅니다.',
               goBackButton: '뒤로가기',
               confirmPasswordError: '비밀번호가 일치하지 않습니다.',
-              additionalSignUpSubmitButton: '무료/프리미엄 즉시 가입',
+              additionalSignUpSubmitButton: '즉시 가입 완료',
             ),
             theme: LoginTheme(
               primaryColor: HISpeakTheme.purpleMain,
