@@ -65,14 +65,14 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     final showTutorial = sermonProvider.showTutorial &&
-        (sermonProvider.tutorialStep == 2 || sermonProvider.tutorialStep == 3);
+        (sermonProvider.tutorialStep == 4 || sermonProvider.tutorialStep == 5);
 
     return PopScope(
       canPop: !sermonProvider.showTutorial,
       onPopInvoked: (didPop) {
         if (didPop) return;
         if (sermonProvider.showTutorial) {
-          sermonProvider.setTutorialStep(1);
+          sermonProvider.setTutorialStep(3);
           if (sermonProvider.isRecording) {
             sermonProvider.toggleRecording();
           }
@@ -86,7 +86,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
             icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
             onPressed: () {
               if (sermonProvider.showTutorial) {
-                sermonProvider.setTutorialStep(1);
+                sermonProvider.setTutorialStep(3);
               }
               // Stop translation session upon leaving page
               if (sermonProvider.isRecording) {
@@ -534,7 +534,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
     double? tooltipTop;
     double? tooltipBottom;
 
-    if (provider.tutorialStep == 2) {
+    if (provider.tutorialStep == 4) {
       isCircle = false;
       spotlightOffset = Offset(size.width / 2, size.height - 180);
       width = size.width - 24;
@@ -576,7 +576,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
           ),
         ],
       );
-    } else if (provider.tutorialStep == 3) {
+    } else if (provider.tutorialStep == 5) {
       isCircle = false;
       spotlightOffset = Offset(size.width / 2, size.height * 0.33);
       width = size.width - 24;
@@ -693,7 +693,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                             ),
                           ),
                           child: Text(
-                            '안내 ${provider.tutorialStep + 1} / 7',
+                            '안내 ${provider.tutorialStep + 1} / 9',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -729,7 +729,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                       children: [
                         TextButton(
                           onPressed: () {
-                            if (provider.tutorialStep == 2) {
+                            if (provider.tutorialStep == 4) {
                               if (provider.isRecording) {
                                 provider.toggleRecording();
                               }
@@ -770,7 +770,7 @@ class _LiveTranslationPageState extends State<LiveTranslationPage> {
                           ),
                           child: ElevatedButton(
                             onPressed: () {
-                              if (provider.tutorialStep == 2) {
+                              if (provider.tutorialStep == 4) {
                                 provider.nextTutorialStep();
                               } else {
                                 if (provider.isRecording) {

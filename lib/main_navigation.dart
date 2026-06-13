@@ -38,11 +38,13 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       int targetIndex = _currentIndex;
       if (sermonProvider.tutorialStep == 0 ||
           sermonProvider.tutorialStep == 1 ||
-          sermonProvider.tutorialStep == 4) {
+          sermonProvider.tutorialStep == 2 ||
+          sermonProvider.tutorialStep == 3 ||
+          sermonProvider.tutorialStep == 6) {
         targetIndex = 0;
-      } else if (sermonProvider.tutorialStep == 5) {
+      } else if (sermonProvider.tutorialStep == 7) {
         targetIndex = 1;
-      } else if (sermonProvider.tutorialStep == 6) {
+      } else if (sermonProvider.tutorialStep == 8) {
         targetIndex = 2;
       }
       if (_currentIndex != targetIndex) {
@@ -158,7 +160,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   }
 
   Widget _buildTutorialOverlay(BuildContext context, SermonProvider provider) {
-    if (provider.tutorialStep == 2 || provider.tutorialStep == 3) {
+    if (provider.tutorialStep == 4 || provider.tutorialStep == 5) {
       return const SizedBox();
     }
 
@@ -213,6 +215,94 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         break;
 
       case 1:
+        isCircle = false;
+        spotlightOffset = Offset(size.width / 2, size.height * 0.22);
+        width = size.width - 24;
+        height = 140;
+        tooltipTop = size.height * 0.35;
+        tooltipContent = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                  size: 22,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '1. 말씀 & 인용구 롤링 배너',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF5B21B6),
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '은혜받아 보관함에 즐겨찾기 해둔 성경 구절과 설교 핵심 인용구들이 홈 화면 상단 배너에 아름다운 슬라이더 카드로 자동 로드되며 롤링됩니다.\n\n매일 새로운 말씀과 묵상으로 은혜롭게 하루를 시작해 보세요.',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                height: 1.5,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ],
+        );
+        break;
+
+      case 2:
+        isCircle = false;
+        spotlightOffset = Offset(size.width / 2, 115);
+        width = size.width;
+        height = 40;
+        tooltipTop = 150;
+        tooltipContent = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.wifi_rounded,
+                  color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                  size: 22,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '2. 실시간 네트워크 상태 감지',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF5B21B6),
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '인터넷 연결이 불안정하거나 끊어지면 상단에 노란색 경고바가 즉시 나타납니다.\n\n앱이 상태를 실시간 모니터링하여, 오프라인 시에도 시뮬레이터 안전 모드로 전환되어 안심하고 사용하실 수 있습니다.',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                height: 1.5,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ],
+        );
+        break;
+
+      case 3:
         isCircle = true;
         spotlightOffset = Offset(size.width / 2, size.height * 0.49);
         radius = 115;
@@ -230,7 +320,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '1. 실시간 예배 번역 및 녹음',
+                  '3. 실시간 예배 번역 및 녹음',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -242,7 +332,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '가운데 마이크 버튼을 터치하여 녹음을 시작해 보세요.\n목사님의 말씀이 실시간으로 기록되며, 즉시 영어 번역본이 화면에 실시간으로 생성됩니다.\n\n지금 \'다음\'을 누르면 가상 설교 번역 시뮬레이션이 시작됩니다!',
+              '가운데 십자가 마이크 버튼을 터치하여 녹음을 시작해 보세요.\n목사님의 말씀이 실시간 기록되며, 영어 동시 번역본이 화면에 실시간으로 생성됩니다.\n\n지금 \'다음\'을 누르면 가상 설교 번역 시뮬레이션이 시작됩니다!',
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
@@ -255,7 +345,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         );
         break;
 
-      case 4:
+      case 6:
         isCircle = false;
         spotlightOffset = Offset(size.width / 2, size.height * 0.34);
         width = size.width - 24;
@@ -274,7 +364,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '4. 설교 종료 후 자동 저장 및 요약',
+                  '6. 설교 종료 후 자동 저장 및 요약',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -299,7 +389,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         );
         break;
 
-      case 5:
+      case 7:
         isCircle = true;
         spotlightOffset = Offset(size.width * 0.30, size.height - 45);
         radius = 45;
@@ -317,7 +407,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '5. 한영 대조 성경 읽기 & 보관',
+                  '7. 한영 대조 성경 읽기 & 보관',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -342,7 +432,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         );
         break;
 
-      case 6:
+      case 8:
         isCircle = true;
         spotlightOffset = Offset(size.width * 0.50, size.height - 45);
         radius = 45;
@@ -360,7 +450,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '6. 설교 기록 아카이브',
+                  '8. 설교 기록 아카이브',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -463,7 +553,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                             ),
                           ),
                           child: Text(
-                            '안내 ${provider.tutorialStep + 1} / 7',
+                            '안내 ${provider.tutorialStep + 1} / 9',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -498,19 +588,19 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                         if (provider.tutorialStep > 0)
                           TextButton(
                             onPressed: () {
-                              if (provider.tutorialStep == 4) {
-                                // Go back to Step 3 on LiveTranslation screen
+                              if (provider.tutorialStep == 6) {
+                                // Go back to Step 5 (Timeline) on LiveTranslation screen
                                 if (!provider.isRecording) {
                                   provider.toggleRecording();
                                 }
                                 Navigator.pushNamed(context, '/live');
-                                provider.setTutorialStep(3);
-                              } else if (provider.tutorialStep == 5) {
+                                provider.setTutorialStep(5);
+                              } else if (provider.tutorialStep == 7) {
                                 setState(() {
                                   _currentIndex = 0;
                                 });
                                 provider.previousTutorialStep();
-                              } else if (provider.tutorialStep == 6) {
+                              } else if (provider.tutorialStep == 8) {
                                 setState(() {
                                   _currentIndex = 1;
                                 });
@@ -570,19 +660,19 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                           ),
                           child: ElevatedButton(
                             onPressed: () {
-                              if (provider.tutorialStep < 6) {
-                                if (provider.tutorialStep == 1) {
+                              if (provider.tutorialStep < 8) {
+                                if (provider.tutorialStep == 3) {
                                   provider.nextTutorialStep();
                                   if (!provider.isRecording) {
                                     provider.toggleRecording();
                                   }
                                   Navigator.pushNamed(context, '/live');
-                                } else if (provider.tutorialStep == 4) {
+                                } else if (provider.tutorialStep == 6) {
                                   setState(() {
                                     _currentIndex = 1;
                                   });
                                   provider.nextTutorialStep();
-                                } else if (provider.tutorialStep == 5) {
+                                } else if (provider.tutorialStep == 7) {
                                   setState(() {
                                     _currentIndex = 2;
                                   });
@@ -610,14 +700,14 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  provider.tutorialStep == 6 ? '시작하기 🎉' : '다음 기능',
+                                  provider.tutorialStep == 8 ? '시작하기 🎉' : '다음 기능',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                     fontFamily: 'Inter',
                                   ),
                                 ),
-                                if (provider.tutorialStep < 6) ...[
+                                if (provider.tutorialStep < 8) ...[
                                   const SizedBox(width: 4),
                                   const Icon(Icons.arrow_forward_rounded, size: 16),
                                 ],
