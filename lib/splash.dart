@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'state/sermon_provider.dart';
 import 'theme.dart';
+import 'l10n/hispeak_localizations.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -46,11 +47,11 @@ class _SplashPageState extends State<SplashPage>
           context,
           listen: false,
         );
-        
-        // [VIDEO RECORDING MODE] Force sign out on every startup 
+
+        // [VIDEO RECORDING MODE] Force sign out on every startup
         // so the login screen and animations always appear!
         await sermonProvider.signOut();
-        
+
         if (sermonProvider.user != null) {
           Navigator.pushReplacementNamed(context, '/navigation');
         } else {
@@ -96,7 +97,9 @@ class _SplashPageState extends State<SplashPage>
                               borderRadius: BorderRadius.circular(32),
                               boxShadow: [
                                 BoxShadow(
-                                  color: HISpeakTheme.purpleMain.withOpacity(isDark ? 0.35 : 0.15),
+                                  color: HISpeakTheme.purpleMain.withOpacity(
+                                    isDark ? 0.35 : 0.15,
+                                  ),
                                   blurRadius: 28,
                                   offset: const Offset(0, 8),
                                 ),
@@ -118,7 +121,9 @@ class _SplashPageState extends State<SplashPage>
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.w900,
-                              color: isDark ? Colors.white : const Color(0xFF1E293B),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1E293B),
                               letterSpacing: 1.5,
                               fontFamily: 'Inter',
                             ),
@@ -127,11 +132,13 @@ class _SplashPageState extends State<SplashPage>
 
                           // Premium Subtext
                           Text(
-                            '지혜롭고 영감 있는 실시간 예배 번역기',
+                            context.l10n.t('splashSubtitle'),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
+                              color: isDark
+                                  ? const Color(0xFFCBD5E1)
+                                  : const Color(0xFF64748B),
                               letterSpacing: 0.5,
                               fontFamily: 'Inter',
                             ),

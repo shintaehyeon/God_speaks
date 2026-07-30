@@ -5,9 +5,10 @@ class SavedItem {
   final String type; // 'verse' or 'quote'
   final String serviceType; // 'SUNDAY SERVICE', 'MIDWEEK SERVICE' etc.
   final String date;
-  final String title; // 'VERSE OF THE DAY: John 3:16' or 'Key Sermon Quote' etc.
+  final String
+  title; // 'VERSE OF THE DAY: John 3:16' or 'Key Sermon Quote' etc.
   final String content;
-  final String authorOrVersion; // 'NIV Version' or 'Pastor David Miller'
+  final String authorOrVersion; // Bible version or speaker name
   final DateTime timestamp;
 
   SavedItem({

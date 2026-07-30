@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'state/sermon_provider.dart';
 import 'theme.dart';
+import 'l10n/hispeak_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -22,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
     if (success) {
       return null;
     } else {
-      return '이메일 또는 비밀번호가 올바르지 않습니다.';
+      return context.l10n.t('emailInvalid');
     }
   }
 
@@ -37,12 +38,12 @@ class _LoginPageState extends State<LoginPage> {
     if (success) {
       return null;
     } else {
-      return '가입에 실패했습니다. 사용 중인 이메일이거나 네트워크를 확인하세요.';
+      return context.l10n.t('signupFailed');
     }
   }
 
   Future<String?> _recoverPassword(String name) async {
-    return '비밀번호 재설정은 현재 이메일 안전 통합 모드로 인해 지원되지 않습니다.';
+    return context.l10n.t('recoverUnavailable');
   }
 
   void _showGoogleSafeModeDialog() {
@@ -51,25 +52,29 @@ class _LoginPageState extends State<LoginPage> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: const [
-            Icon(Icons.shield_rounded, color: HISpeakTheme.purpleMain),
-            SizedBox(width: 8),
+          children: [
+            const Icon(Icons.shield_rounded, color: HISpeakTheme.purpleMain),
+            const SizedBox(width: 8),
             Text(
-              "시뮬레이터 안전 모드",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              context.l10n.t('simulatorSafeModeTitle'),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ],
         ),
-        content: const Text(
-          "iOS 시뮬레이터 환경의 안정성을 위해 소셜 로그인 API 대신 이메일 가입/로그인을 사용해 주십시오.",
-          style: TextStyle(height: 1.5, fontSize: 14, color: Color(0xFF475569)),
+        content: Text(
+          context.l10n.t('simulatorSafeModeDesc'),
+          style: const TextStyle(
+            height: 1.5,
+            fontSize: 14,
+            color: Color(0xFF475569),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              "확인",
-              style: TextStyle(
+            child: Text(
+              context.l10n.t('ok'),
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: HISpeakTheme.purpleMain,
                 fontSize: 15,
@@ -102,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
             additionalSignupFields: [
               UserFormField(
                 keyName: 'name',
-                displayName: '이름 (Name)',
+                displayName: context.l10n.t('nameField'),
                 icon: const Icon(Icons.person_outline_rounded),
                 defaultValue: '',
               ),
@@ -110,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
             loginProviders: [
               LoginProvider(
                 icon: FontAwesomeIcons.google,
-                label: '구글 계정',
+                label: context.l10n.t('googleAccount'),
                 callback: () async {
                   final sermonProvider = Provider.of<SermonProvider>(
                     context,
@@ -120,13 +125,13 @@ class _LoginPageState extends State<LoginPage> {
                   if (success) {
                     return null;
                   } else {
-                    return '구글 로그인 실패 (Firebase 연동 오류)';
+                    return context.l10n.t('googleFailed');
                   }
                 },
               ),
               LoginProvider(
                 icon: FontAwesomeIcons.bolt,
-                label: '게스트 원터치 시작',
+                label: context.l10n.t('guestStart'),
                 callback: () async {
                   final sermonProvider = Provider.of<SermonProvider>(
                     context,
@@ -136,23 +141,23 @@ class _LoginPageState extends State<LoginPage> {
                   if (success) {
                     return null;
                   } else {
-                    return '게스트 체험 로그인 실패';
+                    return context.l10n.t('guestFailed');
                   }
                 },
               ),
             ],
             messages: LoginMessages(
-              userHint: '이메일 주소 (Email)',
-              passwordHint: '비밀번호 (Password)',
-              confirmPasswordHint: '비밀번호 확인',
-              loginButton: '이메일 로그인',
-              signupButton: '간편 이메일 가입',
-              forgotPasswordButton: '비밀번호를 잊으셨나요?',
-              recoverPasswordButton: '임시 비밀번호 전송',
-              recoverPasswordIntro: '이메일을 입력하시면 비밀번호 복구 가이드를 보냅니다.',
-              goBackButton: '뒤로가기',
-              confirmPasswordError: '비밀번호가 일치하지 않습니다.',
-              additionalSignUpSubmitButton: '즉시 가입 완료',
+              userHint: context.l10n.t('emailHint'),
+              passwordHint: context.l10n.t('passwordHint'),
+              confirmPasswordHint: context.l10n.t('confirmPasswordHint'),
+              loginButton: context.l10n.t('emailLogin'),
+              signupButton: context.l10n.t('emailSignup'),
+              forgotPasswordButton: context.l10n.t('forgotPassword'),
+              recoverPasswordButton: context.l10n.t('sendTempPassword'),
+              recoverPasswordIntro: context.l10n.t('recoverIntro'),
+              goBackButton: context.l10n.t('goBack'),
+              confirmPasswordError: context.l10n.t('passwordMismatch'),
+              additionalSignUpSubmitButton: context.l10n.t('finishSignup'),
             ),
             theme: LoginTheme(
               primaryColor: HISpeakTheme.purpleMain,
@@ -161,7 +166,9 @@ class _LoginPageState extends State<LoginPage> {
               pageColorDark: Colors.transparent,
               titleStyle: TextStyle(
                 fontWeight: FontWeight.w900,
-                color: isDark ? const Color(0xFFF1F5F9) : HISpeakTheme.purpleMain,
+                color: isDark
+                    ? const Color(0xFFF1F5F9)
+                    : HISpeakTheme.purpleMain,
                 fontSize: 28,
                 letterSpacing: 2.0,
               ),
@@ -172,14 +179,18 @@ class _LoginPageState extends State<LoginPage> {
               cardTheme: CardTheme(
                 color: isDark
                     ? const Color(0xFF1E293B).withOpacity(0.85)
-                    : const Color(0xFFFDFBFF).withOpacity(0.92), // Slightly richer lavender-tinted card background
+                    : const Color(0xFFFDFBFF).withOpacity(
+                        0.92,
+                      ), // Slightly richer lavender-tinted card background
                 elevation: 10, // Premium elevated shadow
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                   side: BorderSide(
                     color: isDark
                         ? Colors.white.withOpacity(0.15)
-                        : HISpeakTheme.purpleMain.withOpacity(0.25), // Elegant border outline
+                        : HISpeakTheme.purpleMain.withOpacity(
+                            0.25,
+                          ), // Elegant border outline
                     width: 1.5,
                   ),
                 ),
@@ -189,11 +200,16 @@ class _LoginPageState extends State<LoginPage> {
                 fillColor: isDark
                     ? const Color(0xFF0F172A)
                     : const Color(0xFFF8FAFC), // Cleaner contrast color
-                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 16,
+                ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFE2E8F0),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.12)
+                        : const Color(0xFFE2E8F0),
                     width: 1.2,
                   ),
                 ),

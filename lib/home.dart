@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:provider/provider.dart';
 import 'state/sermon_provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'theme.dart';
 import 'edit_summary_sheet.dart';
 import 'models/saved_item.dart';
+import 'l10n/hispeak_localizations.dart';
 import 'dart:async';
 
 class HomePage extends StatelessWidget {
@@ -33,11 +33,13 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              '실시간 예배 준비 완료',
+              context.l10n.t('liveReady'),
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+                color: isDark
+                    ? const Color(0xFFF1F5F9)
+                    : const Color(0xFF334155),
               ),
             ),
           ],
@@ -51,8 +53,8 @@ class HomePage extends StatelessWidget {
                 SnackBar(
                   content: Text(
                     sermonProvider.isEnglishToKorean
-                        ? '번역 방향: English ➔ 한국어 변경됨'
-                        : '번역 방향: 한국어 ➔ English 변경됨',
+                        ? context.l10n.t('directionChangedEnKr')
+                        : context.l10n.t('directionChangedKrEn'),
                   ),
                   duration: const Duration(seconds: 1),
                 ),
@@ -76,8 +78,8 @@ class HomePage extends StatelessWidget {
                 children: [
                   Text(
                     sermonProvider.isEnglishToKorean
-                        ? '🇺🇸 EN ➔ 🇰🇷 KR'
-                        : '🇰🇷 KR ➔ 🇺🇸 EN',
+                        ? context.l10n.t('directionEnKr')
+                        : context.l10n.t('directionKrEn'),
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -100,15 +102,26 @@ class HomePage extends StatelessWidget {
                   Container(
                     color: Colors.amber[800],
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 16,
+                    ),
                     child: Row(
-                      children: const [
-                        Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
-                        SizedBox(width: 8),
+                      children: [
+                        Icon(
+                          Icons.wifi_off_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '네트워크 미연결: 안전 시뮬레이터 모드로 동작합니다.',
-                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                            context.l10n.t('offlineMode'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -123,254 +136,292 @@ class HomePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                    // Beautiful illustration slider using local premium asset & archived items
-                    ArchivedVersesSlider(
-                      items: sermonProvider.archiveItems
-                          .where((item) => sermonProvider.savedItemIds.contains(item.id))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    // 1. Re-branded Tutorial Mode Banner
-                    GestureDetector(
-                onTap: () {
-                  sermonProvider.toggleRealAI(!sermonProvider.useRealAI);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        sermonProvider.useRealAI
-                            ? '실시간 AI 마이크 번역 모드가 활성화되었습니다!'
-                            : '처음 사용자용 스마트 가이드/튜토리얼 모드가 활성화되었습니다!',
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-                child: PremiumGlassCard(
-                  borderRadius: 16,
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: sermonProvider.useRealAI
-                              ? HISpeakTheme.purpleMain
-                              : const Color(0xFFEC4899),
-                          shape: BoxShape.circle,
+                        // Beautiful illustration slider using local premium asset & archived items
+                        ArchivedVersesSlider(
+                          items: sermonProvider.archiveItems
+                              .where(
+                                (item) => sermonProvider.savedItemIds.contains(
+                                  item.id,
+                                ),
+                              )
+                              .toList(),
                         ),
-                        child: Icon(
-                          sermonProvider.useRealAI
-                              ? Icons.psychology_rounded
-                              : Icons.school_rounded,
-                          color: Colors.white,
-                          size: 20,
+                        const SizedBox(height: 16),
+                        // 1. Re-branded Tutorial Mode Banner
+                        GestureDetector(
+                          onTap: () {
+                            sermonProvider.toggleRealAI(
+                              !sermonProvider.useRealAI,
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  sermonProvider.useRealAI
+                                      ? context.l10n.t('realAiModeSnack')
+                                      : context.l10n.t('guideModeSnack'),
+                                ),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                          child: PremiumGlassCard(
+                            borderRadius: 16,
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: sermonProvider.useRealAI
+                                        ? HISpeakTheme.purpleMain
+                                        : const Color(0xFFEC4899),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    sermonProvider.useRealAI
+                                        ? Icons.psychology_rounded
+                                        : Icons.school_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        sermonProvider.useRealAI
+                                            ? context.l10n.t('realAiModeOn')
+                                            : context.l10n.t('guideModeOn'),
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? (sermonProvider.useRealAI
+                                                    ? const Color(0xFFC4B5FD)
+                                                    : const Color(0xFFF472B6))
+                                              : (sermonProvider.useRealAI
+                                                    ? HISpeakTheme.purpleMain
+                                                    : const Color(0xFF831843)),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        sermonProvider.useRealAI
+                                            ? context.l10n.t('realAiModeDesc')
+                                            : context.l10n.t('guideModeDesc'),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color:
+                                              Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? (sermonProvider.useRealAI
+                                                    ? const Color(0xFFA78BFA)
+                                                    : const Color(0xFFF472B6))
+                                              : (sermonProvider.useRealAI
+                                                    ? const Color(0xFF7C3AED)
+                                                    : const Color(0xFFDB2777)),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.swap_horiz_rounded,
+                                  color: sermonProvider.useRealAI
+                                      ? HISpeakTheme.purpleMain
+                                      : const Color(0xFFEC4899),
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        if (sermonProvider.hasTodaySermonSummary) ...[
+                          const SizedBox(height: 16),
+                          _buildTodaySermonSummaryCard(context, sermonProvider),
+                        ],
+                        const SizedBox(height: 24),
+
+                        // Giant Blue Recording Button
+                        Center(
+                          child: GestureDetector(
+                            onTap: () {
+                              if (sermonProvider.isGuestLimitExceeded) {
+                                _showLimitExceededDialog(context);
+                              } else {
+                                sermonProvider.toggleRecording();
+                                Navigator.pushNamed(context, '/live');
+                              }
+                            },
+                            child: Container(
+                              width: 250,
+                              height: 250,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: HISpeakTheme.purpleMain.withOpacity(
+                                  0.12,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: HISpeakTheme.purpleMain.withOpacity(
+                                      0.08,
+                                    ),
+                                    blurRadius: 40,
+                                    spreadRadius: 10,
+                                  ),
+                                ],
+                              ),
+                              alignment: Alignment.center,
+                              child: Container(
+                                width: 200,
+                                height: 200,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      HISpeakTheme.lightPurple,
+                                      HISpeakTheme.purpleMain,
+                                    ],
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _CrossIcon(size: 54, color: Colors.white),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      context.l10n.t('startLiveTranslation'),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Silent sound wave indicator
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            5,
+                            (index) => Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: 3.5,
+                              height: index % 2 == 0 ? 12 : 24,
+                              decoration: BoxDecoration(
+                                color: HISpeakTheme.purpleMain.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // 1. Noise Cancellation Optimization Selector
+                        Text(
+                          context.l10n.t('noiseCancellation'),
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF64748B),
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
                           children: [
-                            Text(
-                              sermonProvider.useRealAI
-                                  ? '실시간 AI 마이크 모드 활성 중'
-                                  : '🎓 처음 사용자 가이드 모드 활성 중',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? (sermonProvider.useRealAI
-                                          ? const Color(0xFFC4B5FD)
-                                          : const Color(0xFFF472B6))
-                                    : (sermonProvider.useRealAI
-                                          ? HISpeakTheme.purpleMain
-                                          : const Color(0xFF831843)),
-                              ),
+                            _buildLocationChip(context, '본당', sermonProvider),
+                            const SizedBox(width: 8),
+                            _buildLocationChip(
+                              context,
+                              '한동대학교 대강당',
+                              sermonProvider,
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              sermonProvider.useRealAI
-                                  ? '실시간 마이크 입력과 Gemini를 번역에 사용합니다.'
-                                  : '터치하면 모사 설교 튜토리얼을 구동해 가이드라인을 보여줍니다.',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? (sermonProvider.useRealAI
-                                          ? const Color(0xFFA78BFA)
-                                          : const Color(0xFFF472B6))
-                                    : (sermonProvider.useRealAI
-                                          ? const Color(0xFF7C3AED)
-                                          : const Color(0xFFDB2777)),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                            const SizedBox(width: 8),
+                            _buildLocationChip(context, '소예배실', sermonProvider),
                           ],
                         ),
-                      ),
-                      Icon(
-                        Icons.swap_horiz_rounded,
-                        color: sermonProvider.useRealAI
-                            ? HISpeakTheme.purpleMain
-                            : const Color(0xFFEC4899),
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (sermonProvider.hasTodaySermonSummary) ...[
-                const SizedBox(height: 16),
-                _buildTodaySermonSummaryCard(context, sermonProvider),
-              ],
-              const SizedBox(height: 24),
 
-              // Giant Blue Recording Button
-              Center(
-                child: GestureDetector(
-                  onTap: () {
-                    if (sermonProvider.isGuestLimitExceeded) {
-                      _showLimitExceededDialog(context);
-                    } else {
-                      sermonProvider.toggleRecording();
-                      Navigator.pushNamed(context, '/live');
-                    }
-                  },
-                  child: Container(
-                    width: 250,
-                    height: 250,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: HISpeakTheme.purpleMain.withOpacity(0.12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: HISpeakTheme.purpleMain.withOpacity(0.08),
-                          blurRadius: 40,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [HISpeakTheme.lightPurple, HISpeakTheme.purpleMain],
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          _CrossIcon(
-                            size: 54,
-                            color: Colors.white,
+                        const SizedBox(height: 28),
+
+                        // 2. Translation Mode Selector
+                        Text(
+                          context.l10n.t('translationMode'),
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF64748B),
+                            letterSpacing: 1.0,
                           ),
-                          SizedBox(height: 12),
-                          Text(
-                            '실시간 번역 시작하기',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.06)
+                                : Colors.white.withOpacity(0.35),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.12)
+                                  : Colors.white.withOpacity(0.5),
+                              width: 1.5,
                             ),
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            children: [
+                              _buildModeButton(
+                                context,
+                                '자막 모드',
+                                sermonProvider,
+                              ),
+                              _buildModeButton(
+                                context,
+                                '요약 모드',
+                                sermonProvider,
+                              ),
+                              _buildModeButton(
+                                context,
+                                '인용 추출',
+                                sermonProvider,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Silent sound wave indicator
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  5,
-                  (index) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: 3.5,
-                    height: index % 2 == 0 ? 12 : 24,
-                    decoration: BoxDecoration(
-                      color: HISpeakTheme.purpleMain.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // 1. Noise Cancellation Optimization Selector
-              Text(
-                '장소 최적화 (NOISE CANCELLATION)',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF64748B),
-                  letterSpacing: 1.0,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildLocationChip(context, '본당', sermonProvider),
-                  const SizedBox(width: 8),
-                  _buildLocationChip(context, '한동대학교 대강당', sermonProvider),
-                  const SizedBox(width: 8),
-                  _buildLocationChip(context, '소예배실', sermonProvider),
-                ],
-              ),
-
-              const SizedBox(height: 28),
-
-              // 2. Translation Mode Selector
-              Text(
-                '번역 모드',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF64748B),
-                  letterSpacing: 1.0,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.35),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.5),
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    _buildModeButton(context, '자막 모드', sermonProvider),
-                    _buildModeButton(context, '요약 모드', sermonProvider),
-                    _buildModeButton(context, '인용 추출', sermonProvider),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
-    ],
-  ),
-),
-    ],
-  ),
     );
   }
 
-  Widget _buildTodaySermonSummaryCard(BuildContext context, SermonProvider provider) {
+  Widget _buildTodaySermonSummaryCard(
+    BuildContext context,
+    SermonProvider provider,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Fallback if structured data is empty
     if (provider.todaySermonTitle.isEmpty) {
       final transcript = provider.todaySermonTranscript.trim();
@@ -386,12 +437,18 @@ class HomePage extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.summarize_rounded, color: Color(0xFF2F69F8), size: 20),
+                const Icon(
+                  Icons.summarize_rounded,
+                  color: Color(0xFF2F69F8),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
-                  '오늘의 설교 요약',
+                  context.l10n.t('todaySermonSummary'),
                   style: TextStyle(
-                    color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                    color: isDark
+                        ? const Color(0xFFF1F5F9)
+                        : const Color(0xFF1E293B),
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
                   ),
@@ -403,13 +460,17 @@ class HomePage extends StatelessWidget {
               data: provider.todaySermonSummary,
               styleSheet: MarkdownStyleSheet(
                 p: TextStyle(
-                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                  color: isDark
+                      ? const Color(0xFFCBD5E1)
+                      : const Color(0xFF475569),
                   fontSize: 13,
                   height: 1.45,
                   fontWeight: FontWeight.w600,
                 ),
                 strong: TextStyle(
-                  color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                  color: isDark
+                      ? const Color(0xFFF1F5F9)
+                      : const Color(0xFF1E293B),
                   fontWeight: FontWeight.w900,
                 ),
                 listBullet: const TextStyle(
@@ -425,14 +486,22 @@ class HomePage extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  color: isDark
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
+                  ),
                 ),
                 child: Text(
                   preview,
                   style: TextStyle(
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B),
                     fontSize: 12,
                     height: 1.4,
                   ),
@@ -440,9 +509,9 @@ class HomePage extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 10),
-            const Text(
-              '지난 요약본에도 자동 저장됨',
-              style: TextStyle(
+            Text(
+              context.l10n.t('autoSavedToSummaries'),
+              style: const TextStyle(
                 color: Color(0xFF2F69F8),
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
@@ -466,12 +535,18 @@ class HomePage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.stars_rounded, color: HISpeakTheme.purpleMain, size: 22),
+                  const Icon(
+                    Icons.stars_rounded,
+                    color: HISpeakTheme.purpleMain,
+                    size: 22,
+                  ),
                   const SizedBox(width: 8),
                   Text(
-                    '오늘의 설교 분석',
+                    context.l10n.t('todaySermonAnalysis'),
                     style: TextStyle(
-                      color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                      color: isDark
+                          ? const Color(0xFFF1F5F9)
+                          : const Color(0xFF1E293B),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -480,7 +555,10 @@ class HomePage extends StatelessWidget {
               ),
               if (provider.todaySermonCategory.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF3F0FF),
                     borderRadius: BorderRadius.circular(12),
@@ -497,7 +575,7 @@ class HomePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Title / Main Topic
           Text(
             provider.todaySermonTitle,
@@ -513,11 +591,13 @@ class HomePage extends StatelessWidget {
           // Key Scripture & Parallel Verse Container
           if (provider.todaySermonKeyScripture.isNotEmpty) ...[
             Text(
-              '📖 관련 성경 본문',
+              '📖 ${context.l10n.t('relatedScripture')}',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF475569),
               ),
             ),
             const SizedBox(height: 6),
@@ -525,10 +605,14 @@ class HomePage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                color: isDark
+                    ? const Color(0xFF0F172A)
+                    : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
                 ),
               ),
               child: Column(
@@ -539,7 +623,9 @@ class HomePage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                      color: isDark
+                          ? const Color(0xFF60A5FA)
+                          : const Color(0xFF2563EB),
                     ),
                   ),
                   if (provider.todaySermonKeyScriptureTextKor.isNotEmpty) ...[
@@ -548,7 +634,9 @@ class HomePage extends StatelessWidget {
                       provider.todaySermonKeyScriptureTextKor,
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                        color: isDark
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFF334155),
                         height: 1.4,
                       ),
                     ),
@@ -560,7 +648,9 @@ class HomePage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
-                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        color: isDark
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF64748B),
                         height: 1.4,
                       ),
                     ),
@@ -574,197 +664,250 @@ class HomePage extends StatelessWidget {
           // Sermon Summary Bullet Points
           if (provider.todaySermonBulletPoints.isNotEmpty) ...[
             Text(
-              '💡 핵심 요약',
+              '💡 ${context.l10n.t('summaryCore')}',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF475569),
               ),
             ),
             const SizedBox(height: 6),
-            ...provider.todaySermonBulletPoints.map((pt) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('• ', style: TextStyle(color: HISpeakTheme.purpleMain, fontWeight: FontWeight.bold)),
-                  Expanded(
-                    child: Text(
-                      pt,
+            ...provider.todaySermonBulletPoints.map(
+              (pt) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '• ',
                       style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
-                        height: 1.35,
+                        color: HISpeakTheme.purpleMain,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: Text(
+                        pt,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFF334155),
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
             const SizedBox(height: 12),
           ],
 
           // Application Points
           if (provider.todaySermonApplicationPoints.isNotEmpty) ...[
             Text(
-              '🏃 삶의 적용점',
+              '🏃 ${context.l10n.t('lifeApplication')}',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF475569),
               ),
             ),
             const SizedBox(height: 6),
-            ...provider.todaySermonApplicationPoints.map((pt) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.check_circle_outline_rounded, size: 14, color: Color(0xFF10B981)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      pt,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
-                        height: 1.35,
+            ...provider.todaySermonApplicationPoints.map(
+              (pt) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 14,
+                      color: Color(0xFF10B981),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        pt,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFF334155),
+                          height: 1.35,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            )),
+            ),
             const SizedBox(height: 12),
           ],
 
           // Prayer Points
           if (provider.todaySermonPrayerPoints.isNotEmpty) ...[
             Text(
-              '🙏 기도 제목',
+              '🙏 ${context.l10n.t('prayerPoints')}',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF475569),
               ),
             ),
             const SizedBox(height: 6),
-            ...provider.todaySermonPrayerPoints.map((pt) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.favorite_rounded, size: 14, color: Color(0xFFEC4899)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      pt,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )),
-          ],
-
-        if (provider.todaySermonUserComment.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E38) : const Color(0xFFF5F3FF),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isDark ? const Color(0xFF3B2E5C) : const Color(0xFFE5DEFF),
-                width: 1.5,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+            ...provider.todaySermonPrayerPoints.map(
+              (pt) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.edit_note_rounded, color: HISpeakTheme.purpleMain, size: 18),
+                    const Icon(
+                      Icons.favorite_rounded,
+                      size: 14,
+                      color: Color(0xFFEC4899),
+                    ),
                     const SizedBox(width: 6),
-                    Text(
-                      '✍️ 나의 묵상 메모',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
-                        fontFamily: 'Inter',
+                    Expanded(
+                      child: Text(
+                        pt,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFF334155),
+                          height: 1.35,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  provider.todaySermonUserComment,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF475569),
-                    height: 1.45,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-
-        const SizedBox(height: 14),
-        Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFF1F5F9)),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextButton.icon(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => EditSummarySheet(
-                    summaryId: provider.todaySummaryDocId,
-                    initialBulletPoints: provider.todaySermonBulletPoints,
-                    initialApplicationPoints: provider.todaySermonApplicationPoints,
-                    initialPrayerPoints: provider.todaySermonPrayerPoints,
-                    initialUserComment: provider.todaySermonUserComment,
-                  ),
-                );
-              },
-              icon: const Icon(Icons.edit_note_rounded, size: 18),
-              label: const Text(
-                '수정 / 코멘트 추가',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: HISpeakTheme.purpleMain,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ),
-            Text(
-              '지난 요약본에도 자동 저장됨',
-              style: TextStyle(
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Inter',
               ),
             ),
           ],
-        ),
+
+          if (provider.todaySermonUserComment.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1E1E38)
+                    : const Color(0xFFF5F3FF),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF3B2E5C)
+                      : const Color(0xFFE5DEFF),
+                  width: 1.5,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.edit_note_rounded,
+                        color: HISpeakTheme.purpleMain,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '✍️ ${context.l10n.t('myMeditationMemo')}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDark
+                              ? const Color(0xFFC4B5FD)
+                              : const Color(0xFF6D28D9),
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    provider.todaySermonUserComment,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark
+                          ? const Color(0xFFE2E8F0)
+                          : const Color(0xFF475569),
+                      height: 1.45,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 14),
+          Divider(
+            height: 1,
+            color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => EditSummarySheet(
+                      summaryId: provider.todaySummaryDocId,
+                      initialBulletPoints: provider.todaySermonBulletPoints,
+                      initialApplicationPoints:
+                          provider.todaySermonApplicationPoints,
+                      initialPrayerPoints: provider.todaySermonPrayerPoints,
+                      initialUserComment: provider.todaySermonUserComment,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.edit_note_rounded, size: 18),
+                label: Text(
+                  context.l10n.t('editAddComment'),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: HISpeakTheme.purpleMain,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              Text(
+                context.l10n.t('autoSavedToSummaries'),
+                style: TextStyle(
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -787,23 +930,31 @@ class HomePage extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? HISpeakTheme.purpleMain
-                : (isDark ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.35)),
+                : (isDark
+                      ? Colors.white.withOpacity(0.06)
+                      : Colors.white.withOpacity(0.35)),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isSelected
                   ? HISpeakTheme.purpleMain
-                  : (isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.5)),
+                  : (isDark
+                        ? Colors.white.withOpacity(0.12)
+                        : Colors.white.withOpacity(0.5)),
               width: 1.5,
             ),
           ),
           child: Text(
-            name,
+            _localizedLocationName(context, name),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+              color: isSelected
+                  ? Colors.white
+                  : (isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF475569)),
             ),
           ),
         ),
@@ -841,18 +992,46 @@ class HomePage extends StatelessWidget {
                 : [],
           ),
           child: Text(
-            modeName,
+            _localizedModeName(context, modeName),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
               color: isSelected
                   ? HISpeakTheme.purpleMain
-                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                  : (isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B)),
             ),
           ),
         ),
       ),
     );
+  }
+
+  String _localizedLocationName(BuildContext context, String name) {
+    switch (name) {
+      case '본당':
+        return context.l10n.t('mainHall');
+      case '한동대학교 대강당':
+        return context.l10n.t('handongHall');
+      case '소예배실':
+        return context.l10n.t('smallChapel');
+      default:
+        return name;
+    }
+  }
+
+  String _localizedModeName(BuildContext context, String modeName) {
+    switch (modeName) {
+      case '자막 모드':
+        return context.l10n.t('captionMode');
+      case '요약 모드':
+        return context.l10n.t('summaryMode');
+      case '인용 추출':
+        return context.l10n.t('quoteMode');
+      default:
+        return modeName;
+    }
   }
 
   void _showLimitExceededDialog(BuildContext context) {
@@ -866,22 +1045,25 @@ class HomePage extends StatelessWidget {
           ),
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
           title: Row(
-            children: const [
-              Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444)),
-              SizedBox(width: 8),
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444)),
+              const SizedBox(width: 8),
               Text(
-                '무료 체험 만료 🔒',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                '${context.l10n.t('trialExpiredTitle')} 🔒',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Text(
-                '일반 게스트 무료 체험 기회(최대 5회)를 모두 소진하셨습니다!\n\n간단한 구글 소셜 로그인만 진행하시면 평생 무제한 실시간 번역 자막 감상 및 Gemini AI 설교 챗봇 혜택을 100% 무료로 계속 사용하실 수 있습니다. 👑',
-                style: TextStyle(
+                context.l10n.t('trialExpiredDesc'),
+                style: const TextStyle(
                   fontSize: 14,
                   height: 1.5,
                   color: Color(0xFF64748B),
@@ -892,20 +1074,16 @@ class HomePage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                '나중에',
-                style: TextStyle(color: Color(0xFF64748B)),
+              child: Text(
+                context.l10n.t('later'),
+                style: const TextStyle(color: Color(0xFF64748B)),
               ),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context); // close dialog
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      '우측 하단 "설정" 탭으로 이동하여 로그아웃 후 다시 구글 로그인을 진행해 주세요!',
-                    ),
-                  ),
+                  SnackBar(content: Text(context.l10n.t('loginPromptSnack'))),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -914,9 +1092,9 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
-                '로그인하러 가기 👑',
-                style: TextStyle(
+              child: Text(
+                '${context.l10n.t('goToLogin')} 👑',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -936,7 +1114,8 @@ class ShimmerPlaceholder extends StatefulWidget {
   State<ShimmerPlaceholder> createState() => _ShimmerPlaceholderState();
 }
 
-class _ShimmerPlaceholderState extends State<ShimmerPlaceholder> with SingleTickerProviderStateMixin {
+class _ShimmerPlaceholderState extends State<ShimmerPlaceholder>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -1074,8 +1253,8 @@ class _ArchivedVersesSliderState extends State<ArchivedVersesSlider> {
             // Opacity overlay to ensure readability
             Positioned.fill(
               child: Container(
-                color: isDark 
-                    ? Colors.black.withOpacity(0.4) 
+                color: isDark
+                    ? Colors.black.withOpacity(0.4)
                     : Colors.white.withOpacity(0.15),
               ),
             ),
@@ -1090,12 +1269,20 @@ class _ArchivedVersesSliderState extends State<ArchivedVersesSlider> {
               },
               itemBuilder: (context, index) {
                 final item = widget.items[index];
-                final displayTitle = item.title.replaceAll('VERSE OF THE DAY: ', '').toUpperCase();
+                final displayTitle = item.title
+                    .replaceAll('VERSE OF THE DAY: ', '')
+                    .toUpperCase();
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: PremiumGlassCard(
                     borderRadius: 12,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1122,7 +1309,9 @@ class _ArchivedVersesSliderState extends State<ArchivedVersesSlider> {
                               style: TextStyle(
                                 fontSize: 8,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                color: isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B),
                               ),
                             ),
                           ],
@@ -1137,7 +1326,9 @@ class _ArchivedVersesSliderState extends State<ArchivedVersesSlider> {
                                 fontSize: 12,
                                 fontStyle: FontStyle.italic,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                                color: isDark
+                                    ? const Color(0xFFF1F5F9)
+                                    : const Color(0xFF1E293B),
                                 height: 1.3,
                               ),
                               maxLines: 2,
@@ -1186,20 +1377,15 @@ class _CrossIcon extends StatelessWidget {
   final double size;
   final Color color;
 
-  const _CrossIcon({
-    Key? key,
-    this.size = 54.0,
-    this.color = Colors.white,
-  }) : super(key: key);
+  const _CrossIcon({Key? key, this.size = 54.0, this.color = Colors.white})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(
-        painter: _CrossPainter(color: color),
-      ),
+      child: CustomPaint(painter: _CrossPainter(color: color)),
     );
   }
 }

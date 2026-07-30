@@ -13,7 +13,12 @@
           "package_name": "com.example.mobile_app_final"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "241632718216-bfu5819ksmb0g8de1jk6k9n6cd87bt1i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCG3fh2O2nnk1sB1_qL8eBc91miqDGj420"
@@ -21,7 +26,55 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "241632718216-bfu5819ksmb0g8de1jk6k9n6cd87bt1i.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "241632718216-t23alr877mvl272q44a2gkdffdufuodo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mobileAppFinal"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:241632718216:android:8f547261da8743f7635e3d",
+        "android_client_info": {
+          "package_name": "com.hispeak.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "241632718216-bfu5819ksmb0g8de1jk6k9n6cd87bt1i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG3fh2O2nnk1sB1_qL8eBc91miqDGj420"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "241632718216-bfu5819ksmb0g8de1jk6k9n6cd87bt1i.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "241632718216-t23alr877mvl272q44a2gkdffdufuodo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mobileAppFinal"
+              }
+            }
+          ]
         }
       }
     }

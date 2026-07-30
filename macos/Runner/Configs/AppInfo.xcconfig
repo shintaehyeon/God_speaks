@@ -8,7 +8,7 @@
 PRODUCT_NAME = HISpeak
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.mobileAppFinal
+PRODUCT_BUNDLE_IDENTIFIER = com.hispeak.app
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.hispeak.app. All rights reserved.

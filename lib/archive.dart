@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'state/sermon_provider.dart';
 import 'models/saved_item.dart';
 import 'theme.dart';
+import 'l10n/hispeak_localizations.dart';
 
 class ArchivePage extends StatefulWidget {
   const ArchivePage({Key? key}) : super(key: key);
@@ -13,7 +14,8 @@ class ArchivePage extends StatefulWidget {
   State<ArchivePage> createState() => _ArchivePageState();
 }
 
-class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStateMixin {
+class _ArchivePageState extends State<ArchivePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isSearching = false;
   String _searchText = '';
@@ -43,7 +45,9 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
       if (_searchText.isEmpty) return true;
       return item.title.toLowerCase().contains(_searchText.toLowerCase()) ||
           item.content.toLowerCase().contains(_searchText.toLowerCase()) ||
-          item.authorOrVersion.toLowerCase().contains(_searchText.toLowerCase());
+          item.authorOrVersion.toLowerCase().contains(
+            _searchText.toLowerCase(),
+          );
     }).toList();
 
     final quotes = sermonProvider.archiveItems.where((item) {
@@ -51,7 +55,9 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
       if (_searchText.isEmpty) return true;
       return item.title.toLowerCase().contains(_searchText.toLowerCase()) ||
           item.content.toLowerCase().contains(_searchText.toLowerCase()) ||
-          item.authorOrVersion.toLowerCase().contains(_searchText.toLowerCase());
+          item.authorOrVersion.toLowerCase().contains(
+            _searchText.toLowerCase(),
+          );
     }).toList();
 
     return Scaffold(
@@ -81,9 +87,11 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                         fontSize: 16,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Search verses or quotes...',
+                        hintText: context.l10n.t('searchArchiveHint'),
                         hintStyle: TextStyle(
-                          color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                          color: isDark
+                              ? const Color(0xFF64748B)
+                              : const Color(0xFF94A3B8),
                         ),
                         border: InputBorder.none,
                       ),
@@ -94,7 +102,7 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                       },
                     )
                   : Text(
-                      'Sermon Archive',
+                      context.l10n.t('archiveTitle'),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -126,12 +134,22 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                 indicatorColor: HISpeakTheme.purpleMain,
                 indicatorWeight: 3,
                 labelColor: HISpeakTheme.purpleMain,
-                unselectedLabelColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Inter'),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Inter'),
-                tabs: const [
-                  Tab(text: 'Bible Verses'),
-                  Tab(text: 'Key Quotes'),
+                unselectedLabelColor: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF64748B),
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  fontFamily: 'Inter',
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  fontFamily: 'Inter',
+                ),
+                tabs: [
+                  Tab(text: context.l10n.t('bibleVerses')),
+                  Tab(text: context.l10n.t('keyQuotes')),
                 ],
               ),
             ),
@@ -156,11 +174,20 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.bookmark_border_rounded, size: 48, color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+            Icon(
+              Icons.bookmark_border_rounded,
+              size: 48,
+              color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+            ),
             const SizedBox(height: 12),
             Text(
-              'No items archived yet',
-              style: TextStyle(color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8), fontWeight: FontWeight.bold),
+              context.l10n.t('noArchive'),
+              style: TextStyle(
+                color: isDark
+                    ? const Color(0xFF64748B)
+                    : const Color(0xFF94A3B8),
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -168,13 +195,15 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
     }
 
     return ListView.builder(
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      ),
       padding: const EdgeInsets.all(16),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
         final isSaved = provider.savedItemIds.contains(item.id);
-        
+
         // Custom UI designs matching the screenshots
         if (item.type == 'verse') {
           final coverImages = [
@@ -188,10 +217,14 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
           return Container(
             margin: const EdgeInsets.only(bottom: 20),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B).withOpacity(0.85) : Colors.white,
+              color: isDark
+                  ? const Color(0xFF1E293B).withOpacity(0.85)
+                  : Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFF1F5F9),
+                color: isDark
+                    ? Colors.white.withOpacity(0.12)
+                    : const Color(0xFFF1F5F9),
                 width: 1.5,
               ),
             ),
@@ -230,7 +263,10 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                       left: 16,
                       top: 55,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: HISpeakTheme.purpleMain,
                           borderRadius: BorderRadius.circular(6),
@@ -261,7 +297,7 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                     ),
                   ],
                 ),
-                
+
                 Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
@@ -276,7 +312,9 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              color: isDark
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF64748B),
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -284,25 +322,29 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                             item.date,
                             style: TextStyle(
                               fontSize: 10,
-                              color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                              color: isDark
+                                  ? const Color(0xFF64748B)
+                                  : const Color(0xFF94A3B8),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 14),
-                      
+
                       // Verse Text Content
                       Text(
                         item.content,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                          color: isDark
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFF334155),
                           height: 1.5,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Footer action panel
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -311,15 +353,24 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                             item.authorOrVersion,
                             style: TextStyle(
                               fontSize: 11,
-                              color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                              color: isDark
+                                  ? const Color(0xFF64748B)
+                                  : const Color(0xFF94A3B8),
                             ),
                           ),
                           Row(
                             children: [
                               IconButton(
-                                icon: Icon(Icons.share_rounded, size: 18, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                                icon: Icon(
+                                  Icons.share_rounded,
+                                  size: 18,
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
+                                ),
                                 onPressed: () {
-                                  final text = "${item.content}\n\n— ${item.authorOrVersion}";
+                                  final text =
+                                      "${item.content}\n\n— ${item.authorOrVersion}";
                                   Clipboard.setData(ClipboardData(text: text));
                                   SharePlus.instance.share(
                                     ShareParams(
@@ -328,15 +379,20 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                                     ),
                                   );
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('📋 성경 구절이 복사되고 공유 창이 열렸습니다!'),
+                                    SnackBar(
+                                      content: Text(
+                                        context.l10n.t('copiedVerse'),
+                                      ),
                                       duration: Duration(seconds: 1),
                                     ),
                                   );
                                 },
                               ),
                               const SizedBox(width: 4),
-                              _buildSaveButton(isSaved, () => provider.toggleSaveItem(item.id)),
+                              _buildSaveButton(
+                                isSaved,
+                                () => provider.toggleSaveItem(item.id),
+                              ),
                             ],
                           ),
                         ],
@@ -353,10 +409,14 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
             margin: const EdgeInsets.only(bottom: 20),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B).withOpacity(0.85) : Colors.white,
+              color: isDark
+                  ? const Color(0xFF1E293B).withOpacity(0.85)
+                  : Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFF1F5F9),
+                color: isDark
+                    ? Colors.white.withOpacity(0.12)
+                    : const Color(0xFFF1F5F9),
                 width: 1.5,
               ),
             ),
@@ -371,10 +431,16 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E1B4B) : const Color(0xFFEBF2FF),
+                            color: isDark
+                                ? const Color(0xFF1E1B4B)
+                                : const Color(0xFFEBF2FF),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.format_quote_rounded, size: 14, color: HISpeakTheme.purpleMain),
+                          child: Icon(
+                            Icons.format_quote_rounded,
+                            size: 14,
+                            color: HISpeakTheme.purpleMain,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -382,7 +448,9 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF1E293B),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF1E293B),
                           ),
                         ),
                       ],
@@ -391,13 +459,15 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                       item.date,
                       style: TextStyle(
                         fontSize: 10,
-                        color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                        color: isDark
+                            ? const Color(0xFF64748B)
+                            : const Color(0xFF94A3B8),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Quote text
                 Text(
                   item.content,
@@ -405,12 +475,14 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                     fontSize: 15,
                     fontStyle: FontStyle.italic,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                    color: isDark
+                        ? const Color(0xFFCBD5E1)
+                        : const Color(0xFF334155),
                     height: 1.5,
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -419,15 +491,24 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        color: isDark
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF64748B),
                       ),
                     ),
                     Row(
                       children: [
                         IconButton(
-                          icon: Icon(Icons.share_rounded, size: 18, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                          icon: Icon(
+                            Icons.share_rounded,
+                            size: 18,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
+                          ),
                           onPressed: () {
-                            final text = "${item.content}\n\n— ${item.authorOrVersion}";
+                            final text =
+                                "${item.content}\n\n— ${item.authorOrVersion}";
                             Clipboard.setData(ClipboardData(text: text));
                             SharePlus.instance.share(
                               ShareParams(
@@ -436,15 +517,18 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
                               ),
                             );
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('📋 설교 핵심 문구가 복사되고 공유 창이 열렸습니다!'),
+                              SnackBar(
+                                content: Text(context.l10n.t('copiedQuote')),
                                 duration: Duration(seconds: 1),
                               ),
                             );
                           },
                         ),
                         const SizedBox(width: 4),
-                        _buildSaveButton(isSaved, () => provider.toggleSaveItem(item.id)),
+                        _buildSaveButton(
+                          isSaved,
+                          () => provider.toggleSaveItem(item.id),
+                        ),
                       ],
                     ),
                   ],
@@ -462,7 +546,7 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
       return ElevatedButton.icon(
         onPressed: onPressed,
         icon: const Icon(Icons.bookmark_rounded, size: 14),
-        label: const Text('Saved'),
+        label: Text(context.l10n.t('saved')),
         style: ElevatedButton.styleFrom(
           backgroundColor: HISpeakTheme.purpleMain,
           foregroundColor: Colors.white,
@@ -478,7 +562,7 @@ class _ArchivePageState extends State<ArchivePage> with SingleTickerProviderStat
       return OutlinedButton.icon(
         onPressed: onPressed,
         icon: const Icon(Icons.bookmark_border_rounded, size: 14),
-        label: const Text('Save'),
+        label: Text(context.l10n.t('save')),
         style: OutlinedButton.styleFrom(
           foregroundColor: HISpeakTheme.purpleMain,
           side: BorderSide(color: HISpeakTheme.purpleMain, width: 1.5),

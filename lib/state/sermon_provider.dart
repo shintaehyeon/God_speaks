@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,12 +9,14 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import '../models/sermon_summary.dart';
 import '../models/saved_item.dart';
 import '../models/sermon_flow.dart';
 import '../models/bible.dart';
+import '../models/church.dart';
+import '../models/faith_group.dart';
 import '../services/bible_repository.dart';
+import '../firebase_options.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class SermonProvider extends ChangeNotifier {
@@ -23,6 +26,11 @@ class SermonProvider extends ChangeNotifier {
   BibleLibrary? _bibleLibrary;
   BibleLibrary? get bibleLibrary => _bibleLibrary;
 
+  static String _initialLanguageCode() {
+    final languageCode = ui.PlatformDispatcher.instance.locale.languageCode;
+    return ['ko', 'ja', 'fr'].contains(languageCode) ? languageCode : 'ko';
+  }
+
   User? _user;
   User? get user => _user;
   bool _isLoading = false;
@@ -31,7 +39,7 @@ class SermonProvider extends ChangeNotifier {
   // Global Navigation Tab Index
   int _currentNavigationIndex = 0;
   int get currentNavigationIndex => _currentNavigationIndex;
-  
+
   void setNavigationIndex(int index) {
     if (_currentNavigationIndex != index) {
       _currentNavigationIndex = index;
@@ -72,7 +80,8 @@ class SermonProvider extends ChangeNotifier {
   List<String> _todaySermonBulletPoints = [];
   List<String> get todaySermonBulletPoints => _todaySermonBulletPoints;
   List<String> _todaySermonApplicationPoints = [];
-  List<String> get todaySermonApplicationPoints => _todaySermonApplicationPoints;
+  List<String> get todaySermonApplicationPoints =>
+      _todaySermonApplicationPoints;
   List<String> _todaySermonPrayerPoints = [];
   List<String> get todaySermonPrayerPoints => _todaySermonPrayerPoints;
 
@@ -88,23 +97,23 @@ class SermonProvider extends ChangeNotifier {
   String get userRole => _userRole;
   String _translationLanguage = "English";
   String get translationLanguage => _translationLanguage;
+  String _appLanguageCode = _initialLanguageCode();
+  String get appLanguageCode => _appLanguageCode;
   String _appearance = "Light Mode";
   String get appearance => _appearance;
   bool _pushNotifications = true;
   bool get pushNotifications => _pushNotifications;
-  String _preferredBibleVersion = "NIV";
+  String _preferredBibleVersion = "World English Bible";
   String get preferredBibleVersion => _preferredBibleVersion;
   String? _profileImagePath;
   String? get profileImagePath => _profileImagePath;
   bool _hasSeenTutorial = false;
   bool get hasSeenTutorial => _hasSeenTutorial;
 
-  String _customGeminiApiKey = "";
-  String get customGeminiApiKey => _customGeminiApiKey;
-
   int _translationCount = 0;
   int get translationCount => _translationCount;
-  bool get isGuestLimitExceeded => false; // Temporarily unlocked to unlimited for guest demo!
+  bool get isGuestLimitExceeded =>
+      false; // Temporarily unlocked to unlimited for guest demo!
 
   // Real-time Translation State
   bool _isRecording = false;
@@ -134,6 +143,32 @@ class SermonProvider extends ChangeNotifier {
   Set<String> _savedItemIds = {};
   Set<String> get savedItemIds => _savedItemIds;
 
+  // Church finder
+  List<Church> _churches = [];
+  List<Church> get churches => _churches;
+  List<Church> _myChurchSubmissions = [];
+  List<Church> get myChurchSubmissions => _myChurchSubmissions;
+  List<Church> get churchDirectory => _churches.isNotEmpty
+      ? _churches
+      : Church.sampleDirectory(languageCode: _appLanguageCode);
+
+  // Family/community Bible reading
+  List<FaithGroup> _faithGroups = [];
+  List<FaithGroup> get faithGroups => _faithGroups;
+  String? _activeGroupId;
+  String? get activeGroupId => _activeGroupId;
+  FaithGroup? get activeGroup {
+    for (final group in _faithGroups) {
+      if (group.id == _activeGroupId) return group;
+    }
+    return _faithGroups.isNotEmpty ? _faithGroups.first : null;
+  }
+
+  List<GroupMember> _groupMembers = [];
+  List<GroupMember> get groupMembers => _groupMembers;
+  List<QtPost> _qtPosts = [];
+  List<QtPost> get qtPosts => _qtPosts;
+
   Timer? _translationTimer;
   Timer? _waveTimer;
   int _simulationSeconds = 0;
@@ -141,6 +176,11 @@ class SermonProvider extends ChangeNotifier {
   bool _isOffline = false;
   bool get isOffline => _isOffline;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  StreamSubscription<QuerySnapshot>? _churchSubscription;
+  StreamSubscription<QuerySnapshot>? _myChurchSubmissionSubscription;
+  StreamSubscription<QuerySnapshot>? _faithGroupSubscription;
+  StreamSubscription<QuerySnapshot>? _groupMemberSubscription;
+  StreamSubscription<QuerySnapshot>? _qtPostSubscription;
 
   SermonProvider() {
     _auth.authStateChanges().listen((User? u) {
@@ -150,6 +190,9 @@ class SermonProvider extends ChangeNotifier {
         _listenToSummaries();
         _listenToArchiveItems();
         _listenToSavedUserItems();
+        _listenToChurches();
+        _listenToMyChurchSubmissions();
+        _listenToFaithGroups();
       } else {
         _resetState();
       }
@@ -169,12 +212,341 @@ class SermonProvider extends ChangeNotifier {
     }
   }
 
+  String _normalizeAppLanguageCode(String? code) {
+    return ['ko', 'ja', 'fr'].contains(code) ? code! : 'ko';
+  }
+
+  String _localized(Map<String, String> values) {
+    return values[_appLanguageCode] ?? values['ko'] ?? values.values.first;
+  }
+
+  String get _reportLanguageName {
+    return switch (_appLanguageCode) {
+      'ja' => 'Japanese',
+      'fr' => 'French',
+      _ => 'Korean',
+    };
+  }
+
+  String _localizedLocationName(String location) {
+    switch (location) {
+      case '한동대학교 대강당':
+        return _localized({
+          'ko': '한동대학교 대강당',
+          'ja': 'ハンドン大学 大講堂',
+          'fr': 'Auditorium de Handong',
+        });
+      case '소예배실':
+        return _localized({
+          'ko': '소예배실',
+          'ja': '小礼拝室',
+          'fr': 'Petite chapelle',
+        });
+      default:
+        return _localized({'ko': '본당', 'ja': '本堂', 'fr': 'Sanctuaire'});
+    }
+  }
+
+  bool _isActivationStatus(String text) {
+    return text.contains('마이크가 활성화되었습니다') ||
+        text.contains('マイクが有効になりました') ||
+        text.contains('Le micro est activé');
+  }
+
+  _LocalizedSermonDraft _draft(String kind) {
+    switch (kind) {
+      case 'faith':
+        return _LocalizedSermonDraft(
+          title: _localized({
+            'ko': '믿음의 시련을 이기는 소망',
+            'ja': '信仰の試練に勝つ希望',
+            'fr': 'L’espérance qui traverse l’épreuve de la foi',
+          }),
+          category: 'FAITH',
+          summaryPoints: [
+            _localized({
+              'ko': '고난 속에서도 하나님의 더 큰 섭리를 바라봅니다.',
+              'ja': '苦難の中でも神の大きな摂理を見つめます。',
+              'fr':
+                  'Même dans l’épreuve, nous regardons à la providence de Dieu.',
+            }),
+            _localized({
+              'ko': '믿음의 시련은 인내와 신앙의 성숙으로 이끕니다.',
+              'ja': '信仰の試練は忍耐と霊的な成熟へ導きます。',
+              'fr':
+                  'L’épreuve de la foi nous conduit vers la patience et la maturité.',
+            }),
+            _localized({
+              'ko': '삶의 풍랑 속에서도 믿음의 방패를 굳게 붙듭니다.',
+              'ja': '人生の嵐の中でも信仰の盾を握りしめます。',
+              'fr':
+                  'Dans les tempêtes de la vie, nous tenons ferme le bouclier de la foi.',
+            }),
+          ],
+          appPoints: [
+            _localized({
+              'ko': '시련이 찾아올 때 먼저 기도로 하나님께 나아갑니다.',
+              'ja': '試練の時、まず祈りで神の前に進みます。',
+              'fr':
+                  'Quand l’épreuve vient, aller d’abord vers Dieu dans la prière.',
+            }),
+            _localized({
+              'ko': '고난 중에도 감사할 제목을 매일 고백합니다.',
+              'ja': '苦難の中でも感謝できることを毎日告白します。',
+              'fr':
+                  'Confesser chaque jour des sujets de gratitude, même dans la difficulté.',
+            }),
+          ],
+          prayerPoints: [
+            _localized({
+              'ko': '환난 속에서도 흔들리지 않는 믿음을 부어 주소서.',
+              'ja': '患難の中でも揺るがない信仰を与えてください。',
+              'fr':
+                  'Seigneur, donne-nous une foi ferme au milieu de l’épreuve.',
+            }),
+            _localized({
+              'ko': '어두운 터널 속에서도 주님만 신뢰하게 하소서.',
+              'ja': '暗いトンネルの中でも主だけを信頼させてください。',
+              'fr':
+                  'Aide-nous à te faire confiance même dans les passages sombres.',
+            }),
+          ],
+        );
+      case 'love':
+        return _LocalizedSermonDraft(
+          title: _localized({
+            'ko': '그리스도의 사랑으로 하나 됨',
+            'ja': 'キリストの愛による一致',
+            'fr': 'Unis par l’amour du Christ',
+          }),
+          category: 'LOVE',
+          summaryPoints: [
+            _localized({
+              'ko': '하나님이 우리를 먼저 사랑하셨기에 우리도 사랑해야 합니다.',
+              'ja': '神が先に私たちを愛されたので、私たちも愛します。',
+              'fr':
+                  'Parce que Dieu nous a aimés le premier, nous sommes appelés à aimer.',
+            }),
+            _localized({
+              'ko': '이웃 사랑은 주님이 주신 가장 큰 계명입니다.',
+              'ja': '隣人愛は主が与えられた大きな戒めです。',
+              'fr':
+                  'L’amour du prochain est un grand commandement donné par le Seigneur.',
+            }),
+            _localized({
+              'ko': '말뿐 아니라 행함과 진실함으로 사랑을 실천합니다.',
+              'ja': '言葉だけでなく、行いと真実をもって愛を実践します。',
+              'fr':
+                  'Nous aimons non seulement en paroles, mais en actes et en vérité.',
+            }),
+          ],
+          appPoints: [
+            _localized({
+              'ko': '이번 주 주변의 한 사람에게 구체적인 사랑을 실천합니다.',
+              'ja': '今週、周りの一人に具体的な愛を実践します。',
+              'fr':
+                  'Cette semaine, poser un acte concret d’amour envers une personne proche.',
+            }),
+            _localized({
+              'ko': '상처 준 사람을 그리스도의 사랑으로 용서하기를 결단합니다.',
+              'ja': '傷つけた人をキリストの愛で赦すことを決心します。',
+              'fr': 'Choisir de pardonner avec l’amour du Christ.',
+            }),
+          ],
+          prayerPoints: [
+            _localized({
+              'ko': '십자가 사랑을 닮아 온전히 사랑하게 하소서.',
+              'ja': '十字架の愛に似て、完全に愛する者にしてください。',
+              'fr': 'Rends-nous capables d’aimer à l’image de la croix.',
+            }),
+            _localized({
+              'ko': '미움과 시기를 버리고 화평의 통로가 되게 하소서.',
+              'ja': '憎しみと妬みを捨て、平和の通路としてください。',
+              'fr':
+                  'Libère-nous de la haine et fais de nous des artisans de paix.',
+            }),
+          ],
+        );
+      case 'grace':
+        return _LocalizedSermonDraft(
+          title: _localized({
+            'ko': '십자가의 은혜와 구원의 소망',
+            'ja': '十字架の恵みと救いの希望',
+            'fr': 'La grâce de la croix et l’espérance du salut',
+          }),
+          category: 'GRACE',
+          summaryPoints: [
+            _localized({
+              'ko': '우리는 자격이 아니라 주님의 은혜로 구원받았습니다.',
+              'ja': '私たちは資格ではなく、主の恵みによって救われました。',
+              'fr':
+                  'Nous sommes sauvés non par nos mérites, mais par la grâce du Seigneur.',
+            }),
+            _localized({
+              'ko': '그리스도의 십자가로 우리의 죄가 씻겼습니다.',
+              'ja': 'キリストの十字架によって私たちの罪は洗われました。',
+              'fr': 'Par la croix du Christ, nos péchés sont lavés.',
+            }),
+            _localized({
+              'ko': '은혜에 합당한 삶을 감사로 살아갑니다.',
+              'ja': '恵みにふさわしい人生を感謝と共に歩みます。',
+              'fr':
+                  'Nous vivons dans la gratitude, d’une manière digne de cette grâce.',
+            }),
+          ],
+          appPoints: [
+            _localized({
+              'ko': '매일 아침 주님의 은혜를 조용히 묵상합니다.',
+              'ja': '毎朝、主の恵みを静かに黙想します。',
+              'fr': 'Méditer chaque matin sur la grâce du Seigneur.',
+            }),
+            _localized({
+              'ko': '십자가의 사랑과 복음을 주변에 전합니다.',
+              'ja': '十字架の愛と福音を周りに伝えます。',
+              'fr':
+                  'Partager autour de soi l’amour de la croix et la bonne nouvelle.',
+            }),
+          ],
+          prayerPoints: [
+            _localized({
+              'ko': '값없는 은혜에 날마다 감격하게 하소서.',
+              'ja': '無償の恵みに日々感動させてください。',
+              'fr':
+                  'Renouvelle chaque jour notre émerveillement devant ta grâce.',
+            }),
+            _localized({
+              'ko': '십자가를 묵상하며 주께 더 가까이 나아가게 하소서.',
+              'ja': '十字架を黙想し、主にもっと近づかせてください。',
+              'fr': 'En méditant la croix, rapproche-nous de toi.',
+            }),
+          ],
+        );
+      case 'shepherd':
+        return _LocalizedSermonDraft(
+          title: _localized({
+            'ko': '선한 목자의 인도하심 (The Good Shepherd)',
+            'ja': '良い羊飼いの導き (The Good Shepherd)',
+            'fr': 'La conduite du bon berger (The Good Shepherd)',
+          }),
+          category: 'FAITH',
+          summaryPoints: [
+            _localized({
+              'ko': '여호와께서 우리의 목자가 되시므로 우리는 부족함이 없습니다.',
+              'ja': '主が私たちの羊飼いであるため、私たちには乏しいことがありません。',
+              'fr':
+                  'Puisque le Seigneur est notre berger, nous ne manquons de rien.',
+            }),
+            _localized({
+              'ko': '어두운 골짜기를 지날 때에도 주께서 함께하십니다.',
+              'ja': '暗い谷を通る時も、主が共におられます。',
+              'fr':
+                  'Même dans la vallée obscure, le Seigneur demeure avec nous.',
+            }),
+            _localized({
+              'ko': '주의 지팡이와 막대기가 우리를 보호하고 위로합니다.',
+              'ja': '主の杖と鞭が私たちを守り慰めます。',
+              'fr':
+                  'Sa houlette et son bâton nous protègent et nous consolent.',
+            }),
+          ],
+          appPoints: [
+            _localized({
+              'ko': '목자 되신 하나님께 매일의 불안을 맡깁니다.',
+              'ja': '羊飼いである神に日々の不安を委ねます。',
+              'fr': 'Confier chaque jour nos inquiétudes à Dieu, notre berger.',
+            }),
+            _localized({
+              'ko': '어려운 시기에도 성령의 보호하심을 의지합니다.',
+              'ja': '困難な時にも聖霊の守りに頼ります。',
+              'fr':
+                  'S’appuyer sur la protection de l’Esprit dans les temps difficiles.',
+            }),
+          ],
+          prayerPoints: [
+            _localized({
+              'ko': '선한 목자의 음성을 따르는 순종의 자녀가 되게 하소서.',
+              'ja': '良い羊飼いの声に従う者としてください。',
+              'fr':
+                  'Fais de nous des enfants obéissants qui suivent la voix du bon berger.',
+            }),
+            _localized({
+              'ko': '두려움 앞에서도 주의 도우심만 바라보게 하소서.',
+              'ja': '恐れの前でも主の助けだけを見上げさせてください。',
+              'fr':
+                  'Face à la peur, aide-nous à regarder seulement à ton secours.',
+            }),
+          ],
+        );
+      default:
+        return _LocalizedSermonDraft(
+          title: _localized({
+            'ko': '말씀의 성취와 삶의 열매',
+            'ja': '御言葉の成就と人生の実',
+            'fr': 'L’accomplissement de la Parole et le fruit de la vie',
+          }),
+          category: 'FAITH',
+          summaryPoints: [
+            _localized({
+              'ko': '선포된 말씀이 마음의 좋은 밭에 떨어져 열매 맺기를 소망합니다.',
+              'ja': '語られた御言葉が良い地に落ち、実を結ぶことを願います。',
+              'fr':
+                  'Nous désirons que la Parole semée porte du fruit dans nos cœurs.',
+            }),
+            _localized({
+              'ko': '걱정과 유혹 속에서도 믿음의 뿌리를 말씀 위에 내립니다.',
+              'ja': '心配と誘惑の中でも、信仰の根を御言葉に下ろします。',
+              'fr':
+                  'Même face aux soucis et aux tentations, nous enracinons notre foi dans la Parole.',
+            }),
+            _localized({
+              'ko': '예배 후에도 들은 말씀을 삶의 자리에서 실천합니다.',
+              'ja': '礼拝後も聞いた御言葉を日常で実践します。',
+              'fr':
+                  'Après le culte, nous mettons la Parole entendue en pratique.',
+            }),
+          ],
+          appPoints: [
+            _localized({
+              'ko': '오늘 마음에 남은 말씀 한 구절을 하루 동안 묵상합니다.',
+              'ja': '今日心に残った御言葉を一日黙想します。',
+              'fr': 'Méditer toute la journée un verset reçu aujourd’hui.',
+            }),
+            _localized({
+              'ko': '말씀과 기도로 매일의 삶을 결단합니다.',
+              'ja': '御言葉と祈りで日々の歩みを決断します。',
+              'fr': 'Orienter chaque journée par la Parole et la prière.',
+            }),
+          ],
+          prayerPoints: [
+            _localized({
+              'ko': '말씀을 듣고 행하는 지혜로운 신앙인이 되게 하소서.',
+              'ja': '御言葉を聞き、行う知恵ある信仰者としてください。',
+              'fr': 'Rends-nous sages pour écouter et pratiquer ta Parole.',
+            }),
+            _localized({
+              'ko': '세상 속에서 말씀의 빛을 드러내게 하소서.',
+              'ja': '世の中で御言葉の光を現させてください。',
+              'fr':
+                  'Aide-nous à refléter la lumière de ta Parole dans le monde.',
+            }),
+          ],
+        );
+    }
+  }
+
+  void _configureClientAiModel() {
+    // Gemini must be called through a server-owned endpoint in production.
+    // Keeping this null prevents a client-shipped API key from being used.
+    _geminiModel = null;
+  }
+
   Future<List<BibleSearchResult>> getSemanticVerseRecommendations(
     String transcript,
   ) async {
     if (_geminiModel == null || _bibleLibrary == null) return [];
 
-    final prompt = """
+    final prompt =
+        """
 You are a sermon assistant. Based on the following sermon transcript, recommend 1 or 2 most relevant Bible passages.
 Provide the response strictly as a JSON array of strings containing the book and chapter/verse, for example:
 ["John 3:16", "Romans 8:28"] or ["Psalm 23:1"].
@@ -185,7 +557,9 @@ Sermon Transcript:
 """;
 
     try {
-      final response = await _geminiModel!.generateContent([Content.text(prompt)]);
+      final response = await _geminiModel!.generateContent([
+        Content.text(prompt),
+      ]);
       final responseText = response.text?.trim() ?? "";
       if (responseText.isEmpty) return [];
 
@@ -246,6 +620,17 @@ Sermon Transcript:
     _summaries.clear();
     _archiveItems.clear();
     _savedItemIds.clear();
+    _churches.clear();
+    _myChurchSubmissions.clear();
+    _faithGroups.clear();
+    _groupMembers.clear();
+    _qtPosts.clear();
+    _activeGroupId = null;
+    _churchSubscription?.cancel();
+    _myChurchSubmissionSubscription?.cancel();
+    _faithGroupSubscription?.cancel();
+    _groupMemberSubscription?.cancel();
+    _qtPostSubscription?.cancel();
     _stopLiveTranslation();
   }
 
@@ -260,20 +645,23 @@ Sermon Transcript:
       if (userDoc.exists) {
         Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
         _displayName = data['displayName'] ?? "Alex Johnson";
-        _userRole = data['userRole'] ?? "성도 (Member)";
+        _userRole =
+            data['userRole'] ??
+            _localized({
+              'ko': '성도 (Member)',
+              'ja': '信徒 (Member)',
+              'fr': 'Membre (Member)',
+            });
         _translationLanguage = data['translationLanguage'] ?? "English";
+        _appLanguageCode = _normalizeAppLanguageCode(data['appLanguageCode']);
         _appearance = data['appearance'] ?? "Light Mode";
         _pushNotifications = data['pushNotifications'] ?? true;
-        _preferredBibleVersion = data['preferredBibleVersion'] ?? "NIV";
+        _preferredBibleVersion =
+            data['preferredBibleVersion'] ?? "World English Bible";
         _useRealAI = data['useRealAI'] ?? false;
         _translationCount = data['translationCount'] ?? 0;
         _profileImagePath = data['profileImagePath'];
         _hasSeenTutorial = data['hasSeenTutorial'] ?? false;
-        
-        // [VIDEO RECORDING MODE] Force tutorial to always show for video recording!
-        _hasSeenTutorial = false;
-        
-        _customGeminiApiKey = data['geminiApiKey'] ?? "";
         if (!_hasSeenTutorial) {
           _showTutorial = true; // Trigger tutorial only if never seen
         } else {
@@ -285,6 +673,7 @@ Sermon Transcript:
           'displayName': _displayName,
           'userRole': _userRole,
           'translationLanguage': _translationLanguage,
+          'appLanguageCode': _appLanguageCode,
           'appearance': _appearance,
           'pushNotifications': _pushNotifications,
           'preferredBibleVersion': _preferredBibleVersion,
@@ -292,8 +681,7 @@ Sermon Transcript:
           'translationCount': 0,
           'profileImagePath': null,
           'hasSeenTutorial': false,
-          'geminiApiKey': '',
-          'email': _user!.email,
+          'email': _user!.email ?? '',
           'createdAt': FieldValue.serverTimestamp(),
         });
         _translationCount = 0;
@@ -307,6 +695,7 @@ Sermon Transcript:
 
   Future<void> updateUserPreference({
     String? translationLanguage,
+    String? appLanguageCode,
     String? appearance,
     bool? pushNotifications,
     String? preferredBibleVersion,
@@ -314,7 +703,6 @@ Sermon Transcript:
     bool? useRealAI,
     String? profileImagePath,
     bool? hasSeenTutorial,
-    String? geminiApiKey,
   }) async {
     if (_user == null) return;
     try {
@@ -322,6 +710,10 @@ Sermon Transcript:
       if (translationLanguage != null) {
         _translationLanguage = translationLanguage;
         updates['translationLanguage'] = translationLanguage;
+      }
+      if (appLanguageCode != null) {
+        _appLanguageCode = _normalizeAppLanguageCode(appLanguageCode);
+        updates['appLanguageCode'] = _appLanguageCode;
       }
       if (appearance != null) {
         _appearance = appearance;
@@ -351,11 +743,6 @@ Sermon Transcript:
         _hasSeenTutorial = hasSeenTutorial;
         updates['hasSeenTutorial'] = hasSeenTutorial;
       }
-      if (geminiApiKey != null) {
-        _customGeminiApiKey = geminiApiKey;
-        updates['geminiApiKey'] = geminiApiKey;
-      }
-
       // Optimistic UI update: instantly reflect changes on screen (e.g. Dark Mode)
       notifyListeners();
 
@@ -412,7 +799,12 @@ Sermon Transcript:
 
     // 1. REAL AI MODE ACTIVE
     if (_useRealAI) {
-      _liveTranslationText = "실시간 AI 음성 인식 엔진 및 번역기 초기화 중...";
+      _liveTranslationText = _localized({
+        'ko': '실시간 AI 음성 인식 엔진 및 번역기 초기화 중...',
+        'ja': 'リアルタイムAI音声認識エンジンと翻訳機を初期化しています...',
+        'fr':
+            'Initialisation du moteur de reconnaissance vocale IA et du traducteur...',
+      });
       notifyListeners();
 
       try {
@@ -430,27 +822,25 @@ Sermon Transcript:
             // If mic permission fails or STT not supported, fallback gracefully to simulation
             if (_isRecording) {
               _switchToSimulationFallback(
-                "마이크 연결 상태 또는 권한 부족으로 인해 안전 시뮬레이션 모드로 전환되었습니다.",
+                _localized({
+                  'ko': '마이크 연결 상태 또는 권한 부족으로 인해 안전 시뮬레이션 모드로 전환되었습니다.',
+                  'ja': 'マイク接続または権限の問題により、安全シミュレーションモードに切り替えました。',
+                  'fr':
+                      'Connexion micro ou autorisation insuffisante : passage en mode simulation sécurisé.',
+                }),
               );
             }
           },
         );
 
         if (_speechInitialized) {
-          _liveTranslationText = "마이크가 활성화되었습니다. 한국어로 설교를 말씀하세요...";
+          _liveTranslationText = _localized({
+            'ko': '마이크가 활성화되었습니다. 한국어로 설교를 말씀하세요...',
+            'ja': 'マイクが有効になりました。説教を話してください...',
+            'fr': 'Le micro est activé. Vous pouvez commencer à parler...',
+          });
 
-          // Build Gemini Model (Free tier support)
-          // Injected user's actual API key directly for seamless out-of-the-box operation!
-          final geminiApiKey = _customGeminiApiKey.trim().isNotEmpty
-              ? _customGeminiApiKey.trim()
-              : const String.fromEnvironment(
-                  'GEMINI_API_KEY',
-                  defaultValue: 'AIzaSyBKB3_goai6MVnA5uQ89_BJyg9jCAVo1Uk',
-                );
-          _geminiModel = GenerativeModel(
-            model: 'gemini-2.5-flash',
-            apiKey: geminiApiKey,
-          );
+          _configureClientAiModel();
 
           _startSpeechListening();
 
@@ -486,18 +876,30 @@ Sermon Transcript:
           });
         } else {
           _switchToSimulationFallback(
-            "음성 인식 시스템 초기화에 실패하여 안전 데모 모드로 자동 전환되었습니다.",
+            _localized({
+              'ko': '음성 인식 시스템 초기화에 실패하여 안전 데모 모드로 자동 전환되었습니다.',
+              'ja': '音声認識システムの初期化に失敗したため、安全デモモードに切り替えました。',
+              'fr':
+                  'Échec d’initialisation de la reconnaissance vocale : passage en mode démo sécurisé.',
+            }),
           );
         }
       } catch (e) {
         print("Real AI initialization error: $e");
-        _switchToSimulationFallback("네트워크 또는 장치 오류로 인해 시뮬레이션 모드로 안전 전환되었습니다.");
+        _switchToSimulationFallback(
+          _localized({
+            'ko': '네트워크 또는 장치 오류로 인해 시뮬레이션 모드로 안전 전환되었습니다.',
+            'ja': 'ネットワークまたは端末エラーにより、シミュレーションモードに切り替えました。',
+            'fr':
+                'Erreur réseau ou appareil : passage sécurisé en mode simulation.',
+          }),
+        );
       }
     }
     // 2. SIMULATION MOCK MODE ACTIVE
     else {
       _liveTranslationText =
-          "Establishing connection to audio stream in $_selectedLocation...";
+          "Establishing connection to audio stream in ${_localizedLocationName(_selectedLocation)}...";
       _simulationSeconds = 0;
 
       // Wave simulation timer
@@ -517,7 +919,9 @@ Sermon Transcript:
         " 주의 지팡이와 막대기가 나를 안위하시나이다. (Your rod and your staff, they comfort me.)",
       ];
 
-      _translationTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+      _translationTimer = Timer.periodic(const Duration(milliseconds: 1000), (
+        timer,
+      ) {
         _simulationSeconds += 2; // Increments by 2 simulated units per tick
         int index = (_simulationSeconds ~/ 2) - 1;
 
@@ -525,7 +929,8 @@ Sermon Transcript:
           if (index == 0) {
             _liveTranslationText = streamTexts[0];
           } else {
-            _liveTranslationText = "$_liveTranslationText\n\n${streamTexts[index]}";
+            _liveTranslationText =
+                "$_liveTranslationText\n\n${streamTexts[index]}";
           }
           _accumulatedKoreanText = _liveTranslationText.trim();
         }
@@ -536,8 +941,12 @@ Sermon Transcript:
             SermonFlowStep(
               time: "10:15 AM",
               type: "topic",
-              title: "주제: 말씀의 성취와 삶의 열매",
-              description: "선포된 말씀이 좋은 밭에 떨어져 100배의 결실을 맺기를 소망합니다...",
+              title: _localized({
+                'ko': '주제: 말씀의 성취와 삶의 열매',
+                'ja': '主題: 御言葉の成就と人生の実',
+                'fr': 'Thème : Parole accomplie et fruit de vie',
+              }),
+              description: _draft('default').summaryPoints.first,
             ),
           );
         }
@@ -558,10 +967,23 @@ Sermon Transcript:
         if (_simulationSeconds == 6) {
           _sermonFlowSteps.add(
             SermonFlowStep(
-              time: "진행 중...",
+              time: _localized({
+                'ko': '진행 중...',
+                'ja': '進行中...',
+                'fr': 'En cours...',
+              }),
               type: "pending",
-              title: "결론: 소망의 확신 (Assurance of Hope)",
-              description: "소망은 신성한 타이밍을 신뢰하는 지속적인 선택입니다.",
+              title: _localized({
+                'ko': '결론: 소망의 확신 (Assurance of Hope)',
+                'ja': '結論: 希望の確信 (Assurance of Hope)',
+                'fr': 'Conclusion : assurance de l’espérance',
+              }),
+              description: _localized({
+                'ko': '소망은 하나님의 때를 신뢰하는 지속적인 선택입니다.',
+                'ja': '希望とは、神の時を信頼し続ける選択です。',
+                'fr':
+                    'L’espérance est le choix de faire confiance au temps de Dieu.',
+              }),
             ),
           );
         }
@@ -633,22 +1055,26 @@ Sermon Transcript:
             if (allText.contains('믿음') ||
                 allText.contains('시련') ||
                 allText.contains('고난')) {
-              detectedTitle = '주제: 믿음의 시련을 이기는 소망';
-              detectedDesc = '고난 속에서 낙심하지 않고 하나님의 더 크신 섭리를 바라봅니다...';
+              final draft = _draft('faith');
+              detectedTitle = draft.title;
+              detectedDesc = draft.summaryPoints.first;
             } else if (allText.contains('사랑') ||
                 allText.contains('이웃') ||
                 allText.contains('형제')) {
-              detectedTitle = '주제: 그리스도의 사랑으로 하나 됨';
-              detectedDesc = '하나님이 우리를 먼저 사랑하셨기에 마땅히 형제를 사랑해야 합니다...';
+              final draft = _draft('love');
+              detectedTitle = draft.title;
+              detectedDesc = draft.summaryPoints.first;
             } else if (allText.contains('은혜') ||
                 allText.contains('십자가') ||
                 allText.contains('보혈')) {
-              detectedTitle = '주제: 십자가의 은혜와 구원의 소망';
-              detectedDesc = '아무 자격 없으나 오직 값없는 은혜로 구원받았습니다...';
+              final draft = _draft('grace');
+              detectedTitle = draft.title;
+              detectedDesc = draft.summaryPoints.first;
             } else if (allText.trim().length > 15) {
               // 키워드 없이 어느 정도 말이 쌓이면 기본 주제 카드 표시
-              detectedTitle = '주제: 말씀의 성취와 삶의 열매';
-              detectedDesc = '선포된 말씀이 좋은 밭에 떨어져 100배의 결실을 맺기를 소망합니다...';
+              final draft = _draft('default');
+              detectedTitle = draft.title;
+              detectedDesc = draft.summaryPoints.first;
             }
 
             if (detectedTitle.isNotEmpty) {
@@ -686,7 +1112,11 @@ Sermon Transcript:
                 SermonFlowStep(
                   time: timeStr,
                   type: 'scripture',
-                  title: '실시간 성경 감지 (Scripture Detected)',
+                  title: _localized({
+                    'ko': '실시간 성경 감지 (Scripture Detected)',
+                    'ja': 'リアルタイム聖書箇所検出 (Scripture Detected)',
+                    'fr': 'Passage biblique détecté en direct',
+                  }),
                   description:
                       '"${newWords.length > 40 ? newWords.substring(0, 40) + '...' : newWords}"',
                 ),
@@ -738,25 +1168,41 @@ Sermon Transcript:
     final rawTranscript = _rawSpeechTranscriptText.trim();
 
     if (translatedTranscript.isNotEmpty &&
-        !translatedTranscript.contains("마이크가 활성화되었습니다")) {
+        !_isActivationStatus(translatedTranscript)) {
       _todaySermonTranscript = translatedTranscript;
 
       // Default fields in case of errors/fallbacks
-      String title = '오늘의 실시간 STT 설교 요약';
+      final defaultDraft = _draft('default');
+      String title = _localized({
+        'ko': '오늘의 실시간 STT 설교 요약',
+        'ja': '今日のリアルタイムSTT説教要約',
+        'fr': 'Résumé STT en direct du jour',
+      });
       String category = 'LIVE STT';
-      List<String> summaryPoints = ['실시간 음성으로 인식된 설교 메시지입니다.'];
+      List<String> summaryPoints = [
+        _localized({
+          'ko': '실시간 음성으로 인식된 설교 메시지입니다.',
+          'ja': 'リアルタイム音声認識で取得した説教メッセージです。',
+          'fr':
+              'Message de sermon reconnu par la transcription vocale en direct.',
+        }),
+      ];
       String keyScripture = '';
       String keyScriptureTextKor = '';
       String keyScriptureTextEng = '';
-      List<String> appPoints = ['오늘 선포된 말씀을 묵상하고 삶의 자리에서 실천합시다.'];
-      List<String> prayerPoints = ['선포된 말씀이 내 삶의 인도자가 되게 하소서.'];
+      List<String> appPoints = defaultDraft.appPoints;
+      List<String> prayerPoints = defaultDraft.prayerPoints;
 
       // Scripture detection
       final List<BibleSearchResult> resolvedScriptures = [];
       if (_bibleLibrary != null) {
-        resolvedScriptures.addAll(_bibleLibrary!.parseReferences(translatedTranscript));
+        resolvedScriptures.addAll(
+          _bibleLibrary!.parseReferences(translatedTranscript),
+        );
         if (rawTranscript.isNotEmpty) {
-          resolvedScriptures.addAll(_bibleLibrary!.parseReferences(rawTranscript));
+          resolvedScriptures.addAll(
+            _bibleLibrary!.parseReferences(rawTranscript),
+          );
         }
       }
 
@@ -765,7 +1211,9 @@ Sermon Transcript:
         // If no direct reference is found, call semantic verse recommendation
         if (resolvedScriptures.isEmpty) {
           try {
-            final recommended = await getSemanticVerseRecommendations(translatedTranscript);
+            final recommended = await getSemanticVerseRecommendations(
+              translatedTranscript,
+            );
             resolvedScriptures.addAll(recommended);
           } catch (e) {
             print("Semantic verse recommendation fallback error: $e");
@@ -775,14 +1223,16 @@ Sermon Transcript:
         // Prepare key scripture reference name
         if (resolvedScriptures.isNotEmpty) {
           final first = resolvedScriptures.first;
-          keyScripture = '${first.koreanBookName} ${first.chapter}:${first.verse} / ${first.englishBookName} ${first.chapter}:${first.verse}';
+          keyScripture =
+              '${first.koreanBookName} ${first.chapter}:${first.verse} / ${first.englishBookName} ${first.chapter}:${first.verse}';
           keyScriptureTextKor = first.koreanText;
           keyScriptureTextEng = first.englishText;
         }
 
         try {
-          final reportLanguage = _isEnglishToKorean ? "Korean" : "English";
-          final prompt = """
+          final reportLanguage = _reportLanguageName;
+          final prompt =
+              """
 You are a professional sermon assistant. Generate a structured summary of the following sermon translation/transcript.
 IMPORTANT: You MUST write the entire response content (including title, category, summary, application, prayer) in $reportLanguage.
 
@@ -800,7 +1250,9 @@ Sermon Transcript:
 $translatedTranscript
 """;
 
-          final response = await _geminiModel!.generateContent([Content.text(prompt)]);
+          final response = await _geminiModel!.generateContent([
+            Content.text(prompt),
+          ]);
           if (response.text != null && response.text!.trim().isNotEmpty) {
             String cleanJson = response.text!.trim();
             if (cleanJson.startsWith("```")) {
@@ -818,100 +1270,71 @@ $translatedTranscript
               final Map<String, dynamic> summaryJson = jsonDecode(cleanJson);
               title = summaryJson['title'] ?? title;
               category = (summaryJson['category'] ?? category).toUpperCase();
-              summaryPoints = List<String>.from(summaryJson['summary'] ?? summaryPoints);
-              
+              summaryPoints = List<String>.from(
+                summaryJson['summary'] ?? summaryPoints,
+              );
+
               // If Gemini returned a different key passage, try to resolve it
               final String geminiScripture = summaryJson['keyScripture'] ?? '';
               if (geminiScripture.isNotEmpty && _bibleLibrary != null) {
-                final resolved = _bibleLibrary!.parseReferences(geminiScripture);
+                final resolved = _bibleLibrary!.parseReferences(
+                  geminiScripture,
+                );
                 if (resolved.isNotEmpty) {
                   final first = resolved.first;
-                  keyScripture = '${first.koreanBookName} ${first.chapter}:${first.verse}';
+                  keyScripture =
+                      '${first.koreanBookName} ${first.chapter}:${first.verse}';
                   keyScriptureTextKor = first.koreanText;
                   keyScriptureTextEng = first.englishText;
                 } else {
                   keyScripture = geminiScripture;
                 }
               }
-              
-              appPoints = List<String>.from(summaryJson['application'] ?? appPoints);
-              prayerPoints = List<String>.from(summaryJson['prayer'] ?? prayerPoints);
+
+              appPoints = List<String>.from(
+                summaryJson['application'] ?? appPoints,
+              );
+              prayerPoints = List<String>.from(
+                summaryJson['prayer'] ?? prayerPoints,
+              );
             } catch (jsonErr) {
               print("Failed parsing Gemini JSON summary: $jsonErr");
             }
           }
         } catch (e) {
-          print("Gemini structured summary error: $e. Using smart local fallback analyzer.");
+          print(
+            "Gemini structured summary error: $e. Using smart local fallback analyzer.",
+          );
           // SMART LOCAL FALLBACK ANALYZER
           final lowerText = translatedTranscript.toLowerCase();
-          if (lowerText.contains("믿음") || lowerText.contains("시련") || lowerText.contains("고난") || lowerText.contains("faith") || lowerText.contains("trial")) {
-            title = "믿음의 시련을 이기는 소망";
-            category = "FAITH";
-            summaryPoints = [
-              '고난 속에서 낙심하지 않고 하나님의 더 크신 섭리를 바라봅니다.',
-              '믿음의 시련은 우리의 인내를 온전케 하며 신앙의 성숙으로 이끕니다.',
-              '삶의 거친 풍랑 속에서도 요동치 않고 믿음의 방패를 굳게 잡습니다.'
-            ];
-            appPoints = [
-              '시련이 찾아올 때 불평하는 대신 먼저 기도로 무릎 꿇기.',
-              '고난 속에서도 감사할 제목 3가지를 찾아서 매일 고백하기.'
-            ];
-            prayerPoints = [
-              '환난 속에서도 흔들리지 않는 굳건하고 순전한 믿음을 부어 주옵소서.',
-              '시련의 어두운 터널 속에서 오직 소망의 주님만을 신뢰하게 하소서.'
-            ];
-          } else if (lowerText.contains("사랑") || lowerText.contains("이웃") || lowerText.contains("형제") || lowerText.contains("love")) {
-            title = "그리스도의 사랑으로 하나 됨";
-            category = "LOVE";
-            summaryPoints = [
-              '하나님이 우리를 먼저 사랑하셨기에 우리도 마땅히 형제를 사랑해야 합니다.',
-              '이웃을 내 몸과 같이 사랑하라는 말씀은 주님이 주신 가장 큰 계명입니다.',
-              '말과 혀로만 사랑하지 않고 오직 행함과 진실함으로 실천합니다.'
-            ];
-            appPoints = [
-              '이번 주간 주변의 소외된 이웃 한 명에게 구체적인 사랑과 나눔 실천하기.',
-              '나에게 상처 준 사람을 그리스도의 사랑으로 용서하고 품기.'
-            ];
-            prayerPoints = [
-              '예수 그리스도의 아낌없는 십자가 사랑을 닮아 온전히 사랑하는 자가 되게 하소서.',
-              '내 안에 미움과 시기를 버리고 화평을 이루는 통로로 살아가게 하소서.'
-            ];
-          } else if (lowerText.contains("은혜") || lowerText.contains("십자가") || lowerText.contains("보혈") || lowerText.contains("grace")) {
-            title = "십자가의 은혜와 구원의 소망";
-            category = "GRACE";
-            summaryPoints = [
-              '우리는 아무 자격 없으나 오직 주님의 값없는 은혜로 구원받았습니다.',
-              '예수 그리스도의 십자가 보혈로 우리의 모든 허물과 죄가 씻어졌습니다.',
-              '은혜에 합당한 삶을 살기 위해 늘 감사와 감격 속에 머무릅니다.'
-            ];
-            appPoints = [
-              '나를 구원하신 주님의 은혜를 매일 아침 5분씩 조용히 묵상하기.',
-              '십자가의 사랑과 복음의 기쁜 소식을 주변 이웃에게 전하기.'
-            ];
-            prayerPoints = [
-              '자격 없는 내게 풍성한 사랑을 베푸신 주님의 무한한 은혜에 감격하게 하소서.',
-              '날마다 십자가를 묵상하며 죄에서 돌이켜 주께 한 걸음 더 나아가게 하소서.'
-            ];
+          _LocalizedSermonDraft draft;
+          if (lowerText.contains("믿음") ||
+              lowerText.contains("시련") ||
+              lowerText.contains("고난") ||
+              lowerText.contains("faith") ||
+              lowerText.contains("trial")) {
+            draft = _draft('faith');
+          } else if (lowerText.contains("사랑") ||
+              lowerText.contains("이웃") ||
+              lowerText.contains("형제") ||
+              lowerText.contains("love")) {
+            draft = _draft('love');
+          } else if (lowerText.contains("은혜") ||
+              lowerText.contains("십자가") ||
+              lowerText.contains("보혈") ||
+              lowerText.contains("grace")) {
+            draft = _draft('grace');
           } else {
             // Default smart fallback based on general sermon flow
-            title = "말씀의 성취와 삶의 열매";
-            category = "FAITH";
-            summaryPoints = [
-              '선포된 말씀이 내 마음의 좋은 밭에 떨어져 100배의 결실을 맺기를 소망합니다.',
-              '세상의 걱정과 유혹 속에서도 믿음의 뿌리를 말씀 위에 굳게 내립니다.',
-              '예배를 마친 후 들은 말씀을 삶의 자리에서 온전한 행함으로 살아냅니다.'
-            ];
-            appPoints = [
-              '오늘 주신 말씀 중 마음에 와닿은 구절 하나를 하루 동안 읊조리기.',
-              '말씀 묵상과 기도로 매일의 삶을 결단하며 살아가기.'
-            ];
-            prayerPoints = [
-              '말씀을 듣고 잊어버리는 자가 아니라 삶으로 행하는 지혜로운 신앙인이 되게 하소서.',
-              '세상의 어두운 그늘 속에서 말씀의 빛과 소금의 역할을 감당하게 하소서.'
-            ];
+            draft = _draft('default');
           }
+          title = draft.title;
+          category = draft.category;
+          summaryPoints = draft.summaryPoints;
+          appPoints = draft.appPoints;
+          prayerPoints = draft.prayerPoints;
         }
-      } 
+      }
       // 2. SIMULATION/DEMO MODE ACTIVE
       else {
         // Resolve default references (Psalm 23:1) for demonstration
@@ -919,27 +1342,19 @@ $translatedTranscript
           final first = _bibleLibrary!.lookupReference("시편", 23, 1);
           if (first != null) {
             resolvedScriptures.add(first);
-            keyScripture = '${first.koreanBookName} ${first.chapter}:${first.verse} / ${first.englishBookName} ${first.chapter}:${first.verse}';
+            keyScripture =
+                '${first.koreanBookName} ${first.chapter}:${first.verse} / ${first.englishBookName} ${first.chapter}:${first.verse}';
             keyScriptureTextKor = first.koreanText;
             keyScriptureTextEng = first.englishText;
           }
         }
-        
-        title = '선한 목자의 인도하심 (The Good Shepherd)';
-        category = 'FAITH';
-        summaryPoints = [
-          '여호와께서 우리의 목자가 되심으로써 우리는 어떠한 부족함도 느끼지 않습니다.',
-          '인생의 사망의 음침한 골짜기를 지나갈 때에도 주께서 늘 동행하시기에 요동치 않습니다.',
-          '주의 지팡이와 막대기가 보호하시며 원수 앞에서도 상을 넘치도록 베풀어 주십니다.'
-        ];
-        appPoints = [
-          '목자 되신 하나님을 전적으로 신뢰하며 매일의 불안을 주께 내어 맡깁니다.',
-          '가장 어려운 시기에도 평강을 주시는 성령의 보호하심을 의지합니다.'
-        ];
-        prayerPoints = [
-          '선한 목자의 음성만을 온전히 따르는 순종의 자녀가 되게 하소서.',
-          '사망의 골짜기 앞에서도 오직 주의 도우심만을 바라보게 하소서.'
-        ];
+
+        final draft = _draft('shepherd');
+        title = draft.title;
+        category = draft.category;
+        summaryPoints = draft.summaryPoints;
+        appPoints = draft.appPoints;
+        prayerPoints = draft.prayerPoints;
       }
 
       _todaySermonTitle = title;
@@ -969,12 +1384,21 @@ $translatedTranscript
           'date': DateTime.now().toString().substring(0, 10),
           'category': category,
           'bulletPoints': summaryPoints,
-          'keyScripture': keyScripture.isNotEmpty ? keyScripture : '실시간 음성 인식 세션',
+          'keyScripture': keyScripture.isNotEmpty
+              ? keyScripture
+              : '실시간 음성 인식 세션',
           'keyScriptureTextKor': keyScriptureTextKor,
           'keyScriptureTextEng': keyScriptureTextEng,
           'applicationPoints': appPoints,
           'prayerPoints': prayerPoints,
-          'takeaway': appPoints.isNotEmpty ? appPoints.first : '방금 인식된 설교 음성을 홈 화면에 바로 요약했습니다.',
+          'takeaway': appPoints.isNotEmpty
+              ? appPoints.first
+              : _localized({
+                  'ko': '방금 인식된 설교 음성을 홈 화면에 바로 요약했습니다.',
+                  'ja': '認識された説教音声をホーム画面に要約しました。',
+                  'fr':
+                      'Le sermon reconnu vient d’être résumé sur l’écran d’accueil.',
+                }),
           'audioUrl': 'assets/sample_sermon.mp3',
           'rawTranscript': rawTranscript,
           'translatedTranscript': translatedTranscript,
@@ -1031,7 +1455,13 @@ $translatedTranscript
 
         // Rebuild todaySermonSummary markdown
         _todaySermonSummary = _formatSummaryMarkdown(
-          _todaySermonTitle.isNotEmpty ? _todaySermonTitle : '오늘의 실시간 STT 설교 요약',
+          _todaySermonTitle.isNotEmpty
+              ? _todaySermonTitle
+              : _localized({
+                  'ko': '오늘의 실시간 STT 설교 요약',
+                  'ja': '今日のリアルタイムSTT説教要約',
+                  'fr': 'Résumé STT en direct du jour',
+                }),
           _todaySermonKeyScripture,
           _todaySermonKeyScriptureTextKor,
           _todaySermonKeyScriptureTextEng,
@@ -1091,10 +1521,14 @@ $translatedTranscript
     List<String> prayerPoints,
   ) {
     final buffer = StringBuffer();
-    buffer.writeln("### ⛪ 핵심 주제: $title");
+    buffer.writeln(
+      "### ⛪ ${_localized({'ko': '핵심 주제', 'ja': '中心テーマ', 'fr': 'Thème principal'})}: $title",
+    );
     buffer.writeln();
     if (keyScripture.isNotEmpty) {
-      buffer.writeln("📖 **관련 성경 본문:** $keyScripture");
+      buffer.writeln(
+        "📖 **${_localized({'ko': '관련 성경 본문', 'ja': '関連聖書箇所', 'fr': 'Passage biblique lié'})}:** $keyScripture",
+      );
       if (keyScriptureTextKor.isNotEmpty) {
         buffer.writeln("> $keyScriptureTextKor");
       }
@@ -1103,20 +1537,26 @@ $translatedTranscript
       }
       buffer.writeln();
     }
-    buffer.writeln("💡 **설교 요약:**");
+    buffer.writeln(
+      "💡 **${_localized({'ko': '설교 요약', 'ja': '説教要約', 'fr': 'Résumé du sermon'})}:**",
+    );
     for (final pt in summaryPoints) {
       buffer.writeln("- $pt");
     }
     buffer.writeln();
     if (appPoints.isNotEmpty) {
-      buffer.writeln("🏃 **적용점:**");
+      buffer.writeln(
+        "🏃 **${_localized({'ko': '적용점', 'ja': '適用点', 'fr': 'Applications'})}:**",
+      );
       for (final pt in appPoints) {
         buffer.writeln("- $pt");
       }
       buffer.writeln();
     }
     if (prayerPoints.isNotEmpty) {
-      buffer.writeln("🙏 **기도 제목:**");
+      buffer.writeln(
+        "🙏 **${_localized({'ko': '기도 제목', 'ja': '祈りの課題', 'fr': 'Sujets de prière'})}:**",
+      );
       for (final pt in prayerPoints) {
         buffer.writeln("- $pt");
       }
@@ -1124,116 +1564,36 @@ $translatedTranscript
     return buffer.toString();
   }
 
-  // 3. Summaries Collection Sync & Default Inserter
+  // 3. Summaries Collection Sync
   void _listenToSummaries() {
+    if (_user == null) return;
     _firestore
         .collection('summaries')
-        .orderBy('timestamp', descending: true)
+        .where('userId', isEqualTo: _user!.uid)
         .snapshots()
         .listen((snapshot) {
-          if (snapshot.docs.isEmpty) {
-            // If empty, initialize default database entries for user presentation
-            _initializeDefaultSummaries();
-          } else {
-            _summaries = snapshot.docs
-                .map((doc) => SermonSummary.fromFirestore(doc))
-                .toList();
-            notifyListeners();
-          }
+          _summaries = snapshot.docs
+              .map((doc) => SermonSummary.fromFirestore(doc))
+              .toList();
+          _summaries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          notifyListeners();
         });
-  }
-
-  Future<void> _initializeDefaultSummaries() async {
-    final defaultData = [
-      {
-        'title': 'The Architecture of Hope',
-        'date': 'OCT 22, 2023',
-        'category': 'FAITH',
-        'bulletPoints': [
-          'The sermon explores how hope serves as a structural foundation for endurance. Rather than a fleeting feeling, hope is described as an active choice to trust in divine timing.',
-          'Key scripture: Romans 15:13. The focus was on "overflowing with hope by the power of the Holy Spirit," suggesting that our internal capacity is expanded during trials.',
-          'Closing takeaway: Hope requires community. We are encouraged to build supportive networks that remind us of the promises when we feel the structure weakening.',
-        ],
-        'keyScripture': 'Romans 15:13',
-        'takeaway':
-            'Hope requires community. We are encouraged to build supportive networks that remind us of the promises when we feel the structure weakening.',
-        'audioUrl': 'assets/sample_sermon.mp3',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 30)),
-        ),
-      },
-      {
-        'title': 'Living in Tension',
-        'date': 'OCT 15, 2023',
-        'category': 'THEOLOGY',
-        'bulletPoints': [
-          'Life in the middle grounds requires an active trust. We are placed between the already-achieved and the not-yet-fulfilled.',
-          'Understanding tension as a room for character development and spiritual maturity.',
-          'We should embrace questions rather than forcing immediate binary answers.',
-        ],
-        'keyScripture': 'James 1:2-4',
-        'takeaway':
-            'Embrace the tension as the very catalyst that shapes robust, unwavering faith.',
-        'audioUrl': 'assets/sample_sermon.mp3',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 37)),
-        ),
-      },
-      {
-        'title': 'The Sound of Silence',
-        'date': 'SEP 28, 2023',
-        'category': 'WISDOM',
-        'bulletPoints': [
-          'Silence is not the absence of God, but a place for deeper intimacy.',
-          'Learning to hear the gentle whisper of God over the loud voices of modern busyness.',
-          'Practicing daily solitude as a necessity for spiritual realignment.',
-        ],
-        'keyScripture': '1 Kings 19:11-13',
-        'takeaway': 'In quietness and confidence shall be your strength.',
-        'audioUrl': 'assets/sample_sermon.mp3',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 54)),
-        ),
-      },
-      {
-        'title': 'Redefining Success',
-        'date': 'SEP 21, 2023',
-        'category': 'PURPOSE',
-        'bulletPoints': [
-          'Success in the Kingdom is measured by faithfulness, not cultural popularity or metric achievements.',
-          'Aligning our daily priorities with eternal value rather than temporary validation.',
-          'Joy is found in the ordinary service of love to those around us.',
-        ],
-        'keyScripture': 'Matthew 25:21',
-        'takeaway':
-            'Well done, good and faithful servant. Enter into the joy of your Lord.',
-        'audioUrl': 'assets/sample_sermon.mp3',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 61)),
-        ),
-      },
-    ];
-
-    WriteBatch batch = _firestore.batch();
-    for (var data in defaultData) {
-      DocumentReference ref = _firestore.collection('summaries').doc();
-      batch.set(ref, data);
-    }
-    await batch.commit();
   }
 
   // 4. Archive Collection & User Saved Sync
   void _listenToArchiveItems() {
-    _firestore.collection('archives').snapshots().listen((snapshot) {
-      if (snapshot.docs.isEmpty) {
-        _initializeDefaultArchive();
-      } else {
-        _archiveItems = snapshot.docs
-            .map((doc) => SavedItem.fromFirestore(doc))
-            .toList();
-        notifyListeners();
-      }
-    });
+    if (_user == null) return;
+    _firestore
+        .collection('archives')
+        .where('userId', isEqualTo: _user!.uid)
+        .snapshots()
+        .listen((snapshot) {
+          _archiveItems = snapshot.docs
+              .map((doc) => SavedItem.fromFirestore(doc))
+              .toList();
+          _archiveItems.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          notifyListeners();
+        });
   }
 
   void _listenToSavedUserItems() {
@@ -1247,87 +1607,6 @@ $translatedTranscript
           _savedItemIds = snapshot.docs.map((doc) => doc.id).toSet();
           notifyListeners();
         });
-  }
-
-  Future<void> _initializeDefaultArchive() async {
-    final defaultData = [
-      {
-        'type': 'verse',
-        'serviceType': 'SUNDAY SERVICE',
-        'date': 'Oct 27, 2024',
-        'title': 'VERSE OF THE DAY: John 3:16',
-        'content':
-            '"For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life."',
-        'authorOrVersion': 'NIV Version',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 200)),
-        ),
-      },
-      {
-        'type': 'verse',
-        'serviceType': 'MIDWEEK SERVICE',
-        'date': 'Oct 23, 2024',
-        'title': 'VERSE OF THE DAY: Psalm 23:1',
-        'content': '"The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters."',
-        'authorOrVersion': 'ESV Version',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 204)),
-        ),
-      },
-      {
-        'type': 'verse',
-        'serviceType': 'FRIDAY PRAYER',
-        'date': 'Nov 8, 2024',
-        'title': 'VERSE OF THE DAY: Philippians 4:13',
-        'content': '"I can do all this through him who gives me strength."',
-        'authorOrVersion': 'NIV Version',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 188)),
-        ),
-      },
-      {
-        'type': 'verse',
-        'serviceType': 'SUNDAY SERVICE',
-        'date': 'Nov 17, 2024',
-        'title': 'VERSE OF THE DAY: Jeremiah 29:11',
-        'content': '"For I know the plans I have for you," declares the Lord, "plans to prosper you and not to harm you, plans to give you hope and a future."',
-        'authorOrVersion': 'NIV Version',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 179)),
-        ),
-      },
-      {
-        'type': 'quote',
-        'serviceType': 'SUNDAY SERVICE',
-        'date': 'Oct 27, 2024',
-        'title': 'Key Sermon Quote',
-        'content':
-            '"Faith is not the absence of doubt, but the courage to trust God in the midst of it."',
-        'authorOrVersion': 'Pastor David Miller',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 200)),
-        ),
-      },
-      {
-        'type': 'quote',
-        'serviceType': 'FRIDAY PRAYER',
-        'date': 'Nov 8, 2024',
-        'title': 'Key Sermon Quote',
-        'content':
-            '"Prayer is not asking. It is a longing of the soul. It is daily admission of one\'s weakness. It is better in prayer to have a heart without words than words without a heart."',
-        'authorOrVersion': 'Pastor Sarah Kim',
-        'timestamp': Timestamp.fromDate(
-          DateTime.now().subtract(const Duration(days: 188)),
-        ),
-      },
-    ];
-
-    WriteBatch batch = _firestore.batch();
-    for (var data in defaultData) {
-      DocumentReference ref = _firestore.collection('archives').doc();
-      batch.set(ref, data);
-    }
-    await batch.commit();
   }
 
   // Toggle Save Item to user's saved list
@@ -1353,9 +1632,342 @@ $translatedTranscript
     }
   }
 
+  // 5. Church Finder
+  void _listenToChurches() {
+    if (_user == null) return;
+    _churchSubscription?.cancel();
+    _churchSubscription = _firestore
+        .collection('churches')
+        .where('status', isEqualTo: 'approved')
+        .snapshots()
+        .listen((snapshot) {
+          _churches = snapshot.docs
+              .map((doc) => Church.fromFirestore(doc))
+              .toList();
+          _churches.sort((a, b) => a.name.compareTo(b.name));
+          notifyListeners();
+        });
+  }
+
+  void _listenToMyChurchSubmissions() {
+    if (_user == null) return;
+    _myChurchSubmissionSubscription?.cancel();
+    _myChurchSubmissionSubscription = _firestore
+        .collection('churches')
+        .where('submittedBy', isEqualTo: _user!.uid)
+        .snapshots()
+        .listen((snapshot) {
+          _myChurchSubmissions = snapshot.docs
+              .map((doc) => Church.fromFirestore(doc))
+              .toList();
+          _myChurchSubmissions.sort(
+            (a, b) => b.createdAt.compareTo(a.createdAt),
+          );
+          notifyListeners();
+        });
+  }
+
+  Future<bool> submitChurch({
+    required String name,
+    required String denomination,
+    required List<String> languages,
+    required List<String> worshipTimes,
+    required String address,
+    required String city,
+    required String country,
+    String note = '',
+  }) async {
+    if (_user == null) return false;
+    final churchName = name.trim();
+    if (churchName.isEmpty || address.trim().isEmpty) return false;
+
+    try {
+      await _firestore.collection('churches').add({
+        'name': churchName,
+        'denomination': denomination.trim().isEmpty
+            ? 'Protestant'
+            : denomination.trim(),
+        'languages': languages
+            .map((lang) => lang.trim())
+            .where((lang) => lang.isNotEmpty)
+            .toList(),
+        'worshipTimes': worshipTimes
+            .map((time) => time.trim())
+            .where((time) => time.isNotEmpty)
+            .toList(),
+        'address': address.trim(),
+        'city': city.trim(),
+        'country': country.trim(),
+        'note': note.trim(),
+        'submittedBy': _user!.uid,
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      print("Error submitting church: $e");
+      return false;
+    }
+  }
+
+  // 6. Family and community Bible reading
+  void _listenToFaithGroups() {
+    if (_user == null) return;
+    _faithGroupSubscription?.cancel();
+    _faithGroupSubscription = _firestore
+        .collection('groups')
+        .where('memberIds', arrayContains: _user!.uid)
+        .snapshots()
+        .listen((snapshot) {
+          _faithGroups = snapshot.docs
+              .map((doc) => FaithGroup.fromFirestore(doc))
+              .toList();
+          _faithGroups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          if (_faithGroups.isEmpty) {
+            _activeGroupId = null;
+            _groupMembers = [];
+            _qtPosts = [];
+            _groupMemberSubscription?.cancel();
+            _qtPostSubscription?.cancel();
+          } else if (_activeGroupId == null ||
+              !_faithGroups.any((group) => group.id == _activeGroupId)) {
+            _activeGroupId = _faithGroups.first.id;
+            _listenToActiveGroupDetails();
+          }
+          notifyListeners();
+        });
+  }
+
+  void setActiveGroup(String groupId) {
+    if (_activeGroupId == groupId) return;
+    _activeGroupId = groupId;
+    _listenToActiveGroupDetails();
+    notifyListeners();
+  }
+
+  void _listenToActiveGroupDetails() {
+    final groupId = _activeGroupId;
+    if (_user == null || groupId == null) return;
+
+    _groupMemberSubscription?.cancel();
+    _groupMemberSubscription = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('members')
+        .snapshots()
+        .listen((snapshot) {
+          _groupMembers = snapshot.docs
+              .map((doc) => GroupMember.fromFirestore(doc))
+              .toList();
+          _groupMembers.sort(
+            (a, b) => b.progressPercent.compareTo(a.progressPercent),
+          );
+          notifyListeners();
+        });
+
+    _qtPostSubscription?.cancel();
+    _qtPostSubscription = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('qtPosts')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+          _qtPosts = snapshot.docs
+              .map((doc) => QtPost.fromFirestore(doc))
+              .toList();
+          notifyListeners();
+        });
+  }
+
+  String _generateInviteCode(String seed) {
+    final source = '${seed}_${DateTime.now().millisecondsSinceEpoch}';
+    final code = base64Url.encode(utf8.encode(source)).replaceAll('=', '');
+    return code.substring(0, min(8, code.length)).toUpperCase();
+  }
+
+  Future<bool> createFamilyGroup(String name) async {
+    if (_user == null) return false;
+    final groupName = name.trim().isEmpty
+        ? _localized({
+            'ko': '우리 가족 말씀항해',
+            'ja': 'わが家の御言葉航海',
+            'fr': 'Voyage biblique familial',
+          })
+        : name.trim();
+
+    try {
+      final groupRef = _firestore.collection('groups').doc();
+      final inviteCode = _generateInviteCode(groupRef.id);
+      final batch = _firestore.batch();
+
+      batch.set(groupRef, {
+        'name': groupName,
+        'ownerId': _user!.uid,
+        'inviteCode': inviteCode,
+        'memberIds': [_user!.uid],
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      batch.set(groupRef.collection('members').doc(_user!.uid), {
+        'userId': _user!.uid,
+        'displayName': _displayName,
+        'currentBook': '마태복음',
+        'currentChapter': 1,
+        'progressPercent': 0.03,
+        'role': 'owner',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+      _activeGroupId = groupRef.id;
+      _listenToActiveGroupDetails();
+      return true;
+    } catch (e) {
+      print("Error creating family group: $e");
+      return false;
+    }
+  }
+
+  Future<bool> joinGroupWithInviteToken(String inviteToken) async {
+    if (_user == null) return false;
+    final token = inviteToken.trim();
+    final separatorIndex = token.indexOf('-');
+    if (separatorIndex <= 0 || separatorIndex == token.length - 1) {
+      return false;
+    }
+
+    final groupId = token.substring(0, separatorIndex);
+    final inviteCode = token.substring(separatorIndex + 1).trim();
+
+    try {
+      final groupRef = _firestore.collection('groups').doc(groupId);
+      final groupDoc = await groupRef.get();
+      if (!groupDoc.exists) return false;
+
+      final group = FaithGroup.fromFirestore(groupDoc);
+      if (group.inviteCode != inviteCode) return false;
+
+      final batch = _firestore.batch();
+      batch.update(groupRef, {
+        'memberIds': FieldValue.arrayUnion([_user!.uid]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      batch.set(groupRef.collection('members').doc(_user!.uid), {
+        'userId': _user!.uid,
+        'displayName': _displayName,
+        'currentBook': '마태복음',
+        'currentChapter': 1,
+        'progressPercent': 0.03,
+        'role': 'member',
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      await batch.commit();
+      _activeGroupId = groupId;
+      _listenToActiveGroupDetails();
+      return true;
+    } catch (e) {
+      print("Error joining family group: $e");
+      return false;
+    }
+  }
+
+  GroupMember? get myGroupMember {
+    if (_user == null) return null;
+    for (final member in _groupMembers) {
+      if (member.userId == _user!.uid) return member;
+    }
+    return null;
+  }
+
+  Future<bool> updateMyReadingProgress({
+    required String currentBook,
+    required int currentChapter,
+    required double progressPercent,
+  }) async {
+    if (_user == null || _activeGroupId == null) return false;
+    try {
+      await _firestore
+          .collection('groups')
+          .doc(_activeGroupId)
+          .collection('members')
+          .doc(_user!.uid)
+          .set({
+            'userId': _user!.uid,
+            'displayName': _displayName,
+            'currentBook': currentBook.trim().isEmpty
+                ? '마태복음'
+                : currentBook.trim(),
+            'currentChapter': max(1, currentChapter),
+            'progressPercent': progressPercent.clamp(0.0, 1.0).toDouble(),
+            'role': myGroupMember?.role ?? 'member',
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+      return true;
+    } catch (e) {
+      print("Error updating reading progress: $e");
+      return false;
+    }
+  }
+
+  Future<bool> markNextChapterRead() async {
+    final member = myGroupMember;
+    final nextChapter = (member?.currentChapter ?? 0) + 1;
+    final nextProgress = ((member?.progressPercent ?? 0.0) + 0.035)
+        .clamp(0.0, 1.0)
+        .toDouble();
+    return updateMyReadingProgress(
+      currentBook: member?.currentBook ?? '마태복음',
+      currentChapter: nextChapter,
+      progressPercent: nextProgress,
+    );
+  }
+
+  Future<bool> shareQtPost({
+    required String verseRef,
+    required String content,
+  }) async {
+    if (_user == null || _activeGroupId == null) return false;
+    if (content.trim().isEmpty) return false;
+
+    try {
+      await _firestore
+          .collection('groups')
+          .doc(_activeGroupId)
+          .collection('qtPosts')
+          .add({
+            'authorId': _user!.uid,
+            'authorName': _displayName,
+            'verseRef': verseRef.trim(),
+            'content': content.trim(),
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+      return true;
+    } catch (e) {
+      print("Error sharing QT post: $e");
+      return false;
+    }
+  }
+
   String _formatCurrentDate() {
     final now = DateTime.now();
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return "${months[now.month - 1]} ${now.day}, ${now.year}";
   }
 
@@ -1369,6 +1981,7 @@ $translatedTranscript
       // 1. Check if same content exists in archives
       QuerySnapshot query = await _firestore
           .collection('archives')
+          .where('userId', isEqualTo: _user!.uid)
           .where('content', isEqualTo: content)
           .where('type', isEqualTo: 'verse')
           .limit(1)
@@ -1380,6 +1993,7 @@ $translatedTranscript
       } else {
         final formattedDate = _formatCurrentDate();
         DocumentReference newDoc = await _firestore.collection('archives').add({
+          'userId': _user!.uid,
           'type': 'verse',
           'serviceType': 'BIBLE STUDY',
           'date': formattedDate,
@@ -1437,14 +2051,29 @@ $translatedTranscript
       if (credential.user != null) {
         bool isGuest = name.toLowerCase().contains("guest");
         await _firestore.collection('users').doc(credential.user!.uid).set({
-          'displayName': isGuest ? "게스트 (Guest)" : name,
+          'displayName': isGuest
+              ? _localized({
+                  'ko': '게스트 (Guest)',
+                  'ja': 'ゲスト (Guest)',
+                  'fr': 'Invité (Guest)',
+                })
+              : name,
           'userRole': isGuest
-              ? "게스트 성도 (Guest)"
-              : "성도 (Member)",
+              ? _localized({
+                  'ko': '게스트 성도 (Guest)',
+                  'ja': 'ゲスト信徒 (Guest)',
+                  'fr': 'Membre invité (Guest)',
+                })
+              : _localized({
+                  'ko': '성도 (Member)',
+                  'ja': '信徒 (Member)',
+                  'fr': 'Membre (Member)',
+                }),
           'translationLanguage': "English",
+          'appLanguageCode': _appLanguageCode,
           'appearance': "System Default",
           'pushNotifications': true,
-          'preferredBibleVersion': "NIV",
+          'preferredBibleVersion': "World English Bible",
           'email': email,
           'createdAt': FieldValue.serverTimestamp(),
           'useRealAI': false, // defaults to false (Guide/Tutorial mode)
@@ -1467,18 +2096,42 @@ $translatedTranscript
   Future<bool> fastGuestSignIn() async {
     _isLoading = true;
     notifyListeners();
-    final email = "fast_guest@sermon.com";
-    final password = "guest12345";
     try {
-      print("fastGuestSignIn: Trying signInWithEmailAndPassword");
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
-      print("fastGuestSignIn: signIn success!");
+      final credential = await _auth.signInAnonymously();
+      _user = credential.user;
+      if (_user != null) {
+        await _firestore.collection('users').doc(_user!.uid).set({
+          'displayName': _localized({
+            'ko': '게스트 (Guest)',
+            'ja': 'ゲスト (Guest)',
+            'fr': 'Invité (Guest)',
+          }),
+          'userRole': _localized({
+            'ko': '게스트 성도 (Guest)',
+            'ja': 'ゲスト信徒 (Guest)',
+            'fr': 'Membre invité (Guest)',
+          }),
+          'translationLanguage': "English",
+          'appLanguageCode': _appLanguageCode,
+          'appearance': "System Default",
+          'pushNotifications': true,
+          'preferredBibleVersion': "World English Bible",
+          'email': '',
+          'createdAt': FieldValue.serverTimestamp(),
+          'useRealAI': false,
+          'translationCount': 0,
+          'hasSeenTutorial': false,
+        }, SetOptions(merge: true));
+        await _loadUserProfile();
+      }
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      print("fastGuestSignIn: signIn failed with $e, attempting signUp");
-      return await signUp(email, password, "게스트 (Guest)");
+      print("fastGuestSignIn failed: $e");
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
@@ -1496,18 +2149,16 @@ $translatedTranscript
     _isLoading = true;
     notifyListeners();
     try {
-      // Skip native Google Sign-In on iOS (debug mode) to avoid 404/invalid_client
-      if (Platform.isIOS && !kReleaseMode) {
-        // Simulate bypass
-        throw Exception('Simulator - bypass native sign-in');
-      }
       // 1. Try actual native Google Sign-In with explicitly provided Client IDs
       // to resolve 401: invalid_client errors on iOS.
       final GoogleSignIn googleSignIn = GoogleSignIn(
         // iOS Client ID from GoogleService-Info.plist
-        clientId: Platform.isIOS ? '241632718216-71ed0f3ee6c09a3e635e3d.apps.googleusercontent.com' : null,
+        clientId: Platform.isIOS
+            ? DefaultFirebaseOptions.ios.iosClientId
+            : null,
         // Web Client ID from Firebase Console (for idToken generation)
-        serverClientId: '241632718216-bfu5819ksmb0g8de1jk6k9n6cd87bt1i.apps.googleusercontent.com',
+        serverClientId:
+            '241632718216-bfu5819ksmb0g8de1jk6k9n6cd87bt1i.apps.googleusercontent.com',
       );
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
@@ -1534,13 +2185,24 @@ $translatedTranscript
             .get();
         if (!doc.exists) {
           await _firestore.collection('users').doc(_user!.uid).set({
-            'displayName': _user!.displayName ?? "사용자 (User)",
-            'userRole': "성도 (Member)",
+            'displayName':
+                _user!.displayName ??
+                _localized({
+                  'ko': '사용자 (User)',
+                  'ja': 'ユーザー (User)',
+                  'fr': 'Utilisateur (User)',
+                }),
+            'userRole': _localized({
+              'ko': '성도 (Member)',
+              'ja': '信徒 (Member)',
+              'fr': 'Membre (Member)',
+            }),
             'translationLanguage': "English",
+            'appLanguageCode': _appLanguageCode,
             'appearance': "System Default",
             'pushNotifications': true,
-            'preferredBibleVersion': "NIV",
-            'email': _user!.email,
+            'preferredBibleVersion': "World English Bible",
+            'email': _user!.email ?? '',
             'createdAt': FieldValue.serverTimestamp(),
             'useRealAI': true, // Auto-enable real AI for members
             'translationCount': 0,
@@ -1553,54 +2215,10 @@ $translatedTranscript
       notifyListeners();
       return true;
     } catch (e) {
-      print("Google Sign-In Failed, running presenter fallback: $e");
-
-      // 2. Safe Presenter Fallback: Create/Sign-in to a robust premium demo user in Firebase Auth!
-      // This guarantees the demo will never fail due to simulator native sign-in issues.
-      try {
-        final email = "premium_demo@sermon.com";
-        final password = "premium12345";
-
-        UserCredential credential;
-        try {
-          credential = await _auth.signInWithEmailAndPassword(
-            email: email,
-            password: password,
-          );
-        } catch (_) {
-          // If demo account doesn't exist, sign up
-          credential = await _auth.createUserWithEmailAndPassword(
-            email: email,
-            password: password,
-          );
-        }
-
-        _user = credential.user;
-        if (_user != null) {
-          await _firestore.collection('users').doc(_user!.uid).set({
-            'displayName': "데모 성도 (Demo User)",
-            'userRole': "성도 (Member)",
-            'translationLanguage': "English",
-            'appearance': "System Default",
-            'pushNotifications': true,
-            'preferredBibleVersion': "NIV",
-            'email': email,
-            'createdAt': FieldValue.serverTimestamp(),
-            'useRealAI': true,
-            'translationCount': 0,
-            'hasSeenTutorial': false,
-          });
-          await _loadUserProfile();
-        }
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      } catch (innerError) {
-        print("Fallback Auth Error: $innerError");
-        _isLoading = false;
-        notifyListeners();
-        return false;
-      }
+      print("Google Sign-In failed: $e");
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
@@ -1624,39 +2242,14 @@ $translatedTranscript
     String sermonSummaryPoints,
     String question,
   ) async {
-    // Injected user's actual API key directly for seamless operation!
-    final geminiApiKey = _customGeminiApiKey.trim().isNotEmpty
-        ? _customGeminiApiKey.trim()
-        : const String.fromEnvironment(
-            'GEMINI_API_KEY',
-            defaultValue: 'AIzaSyBKB3_goai6MVnA5uQ89_BJyg9jCAVo1Uk',
-          );
-
-    final model = GenerativeModel(
-      model: 'gemini-2.5-flash',
-      apiKey: geminiApiKey,
-    );
-
-    final prompt =
-        """
-우리는 기독교 예배 설교 자막/요약 관리 서비스인 'HISpeak'입니다.
-다음은 사용자가 들은 설교 요약 정보입니다:
-제목: $sermonTitle
-요약 내용: $sermonSummaryPoints
-
-이 설교 내용 및 성경 전체의 복음적인 관점에서 사용자의 질문에 답해 주세요.
-친절하고 깊이 있는 신학적 해설을 제공하며, 어조는 은혜롭고 정갈한 한국어로 경어체를 사용해 주십시오.
-
-사용자의 질문: "$question"
-""";
-
-    try {
-      final response = await model.generateContent([Content.text(prompt)]);
-      return response.text ?? "죄송합니다. 답변을 생성할 수 없습니다. 다시 시도해 주세요.";
-    } catch (e) {
-      print("Gemini QA Error: $e");
-      return "네트워크 오류가 발생했습니다. AI 연결 상태를 확인한 후 다시 질문해 주세요. ($e)";
-    }
+    // These values will be used by the server-backed AI endpoint later.
+    final _ = (sermonTitle, sermonSummaryPoints, question);
+    return _localized({
+      'ko': 'AI 질문 기능은 출시용 서버 AI 연동이 준비된 뒤 사용할 수 있습니다.',
+      'ja': 'AI質問機能は、リリース用サーバーAI連携の準備後に利用できます。',
+      'fr':
+          'La fonction de questions IA sera disponible après l’intégration serveur de production.',
+    });
   }
 
   Future<void> signOut() async {
@@ -1666,7 +2259,28 @@ $translatedTranscript
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
+    _churchSubscription?.cancel();
+    _myChurchSubmissionSubscription?.cancel();
+    _faithGroupSubscription?.cancel();
+    _groupMemberSubscription?.cancel();
+    _qtPostSubscription?.cancel();
     _stopLiveTranslation();
     super.dispose();
   }
+}
+
+class _LocalizedSermonDraft {
+  const _LocalizedSermonDraft({
+    required this.title,
+    required this.category,
+    required this.summaryPoints,
+    required this.appPoints,
+    required this.prayerPoints,
+  });
+
+  final String title;
+  final String category;
+  final List<String> summaryPoints;
+  final List<String> appPoints;
+  final List<String> prayerPoints;
 }

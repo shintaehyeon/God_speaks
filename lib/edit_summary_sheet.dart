@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'l10n/hispeak_localizations.dart';
 import 'state/sermon_provider.dart';
 import 'theme.dart';
 
@@ -41,9 +42,7 @@ class _EditSummarySheetState extends State<EditSummarySheet> {
     _prayerController = TextEditingController(
       text: widget.initialPrayerPoints.join('\n'),
     );
-    _commentController = TextEditingController(
-      text: widget.initialUserComment,
-    );
+    _commentController = TextEditingController(text: widget.initialUserComment);
   }
 
   @override
@@ -92,12 +91,15 @@ class _EditSummarySheetState extends State<EditSummarySheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
-            children: const [
-              Icon(Icons.check_circle_rounded, color: Colors.white),
-              SizedBox(width: 8),
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.white),
+              const SizedBox(width: 8),
               Text(
-                '요약본과 코멘트가 성공적으로 저장되었습니다!',
-                style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
+                context.l10n.t('summaryEditSaved'),
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -156,7 +158,7 @@ class _EditSummarySheetState extends State<EditSummarySheet> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '요약본 및 묵상 코멘트 편집',
+                    context.l10n.t('editSummaryTitle'),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -168,47 +170,65 @@ class _EditSummarySheetState extends State<EditSummarySheet> {
               ),
               const SizedBox(height: 6),
               Text(
-                '각 필드를 자유롭게 수정하고 한 줄에 하나씩 적어주세요. 묵상 후의 소중한 의견도 메모해 보세요.',
+                context.l10n.t('editSummaryDesc'),
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
                   fontFamily: 'Inter',
                 ),
               ),
               const SizedBox(height: 20),
 
               // 1. 핵심 요약
-              _buildSectionTitle(context, '💡 핵심 요약 (한 줄에 하나씩)', isDark),
+              _buildSectionTitle(
+                context,
+                '💡 ${context.l10n.t('summaryCore')} (${context.l10n.t('onePerLine')})',
+                isDark,
+              ),
               _buildTextField(
                 controller: _bulletController,
-                hintText: '첫 번째 요약 포인트\n두 번째 요약 포인트...',
+                hintText: context.l10n.t('summaryHint'),
                 isDark: isDark,
               ),
               const SizedBox(height: 16),
 
               // 2. 삶의 적용점
-              _buildSectionTitle(context, '🏃 삶의 적용점 (한 줄에 하나씩)', isDark),
+              _buildSectionTitle(
+                context,
+                '🏃 ${context.l10n.t('lifeApplication')} (${context.l10n.t('onePerLine')})',
+                isDark,
+              ),
               _buildTextField(
                 controller: _appController,
-                hintText: '실천 방안 1\n실천 방안 2...',
+                hintText: context.l10n.t('applicationHint'),
                 isDark: isDark,
               ),
               const SizedBox(height: 16),
 
               // 3. 기도 제목
-              _buildSectionTitle(context, '🙏 기도 제목 (한 줄에 하나씩)', isDark),
+              _buildSectionTitle(
+                context,
+                '🙏 ${context.l10n.t('prayerPoints')} (${context.l10n.t('onePerLine')})',
+                isDark,
+              ),
               _buildTextField(
                 controller: _prayerController,
-                hintText: '기도제목 1\n기도제목 2...',
+                hintText: context.l10n.t('prayerHint'),
                 isDark: isDark,
               ),
               const SizedBox(height: 16),
 
               // 4. 나의 메모 / 코멘트
-              _buildSectionTitle(context, '✍️ 나의 메모 / 코멘트 (자유롭게 입력)', isDark),
+              _buildSectionTitle(
+                context,
+                '✍️ ${context.l10n.t('myMemo')} (${context.l10n.t('freeInput')})',
+                isDark,
+              ),
               _buildTextField(
                 controller: _commentController,
-                hintText: '오늘 말씀을 통해 느낀 점이나 결단 등을 기록해 보세요.',
+                hintText: context.l10n.t('memoHint'),
                 isDark: isDark,
                 maxLines: 4,
               ),
@@ -230,9 +250,11 @@ class _EditSummarySheetState extends State<EditSummarySheet> {
                         ),
                       ),
                       child: Text(
-                        '취소',
+                        context.l10n.t('cancel'),
                         style: TextStyle(
-                          color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                          color: isDark
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFF475569),
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -246,8 +268,14 @@ class _EditSummarySheetState extends State<EditSummarySheet> {
                         borderRadius: BorderRadius.circular(16),
                         gradient: LinearGradient(
                           colors: isDark
-                              ? [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)]
-                              : [const Color(0xFF7C3AED), const Color(0xFF9061F9)],
+                              ? [
+                                  const Color(0xFF8B5CF6),
+                                  const Color(0xFFA78BFA),
+                                ]
+                              : [
+                                  const Color(0xFF7C3AED),
+                                  const Color(0xFF9061F9),
+                                ],
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -268,9 +296,9 @@ class _EditSummarySheetState extends State<EditSummarySheet> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          '저장하기',
-                          style: TextStyle(
+                        child: Text(
+                          context.l10n.t('save'),
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -336,7 +364,10 @@ class _EditSummarySheetState extends State<EditSummarySheet> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: HISpeakTheme.purpleMain, width: 1.5),
+          borderSide: const BorderSide(
+            color: HISpeakTheme.purpleMain,
+            width: 1.5,
+          ),
         ),
       ),
     );

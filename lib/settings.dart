@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'open_source_page.dart';
 import 'state/sermon_provider.dart';
 import 'theme.dart';
+import 'l10n/hispeak_localizations.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -33,20 +33,23 @@ class SettingsPage extends StatelessWidget {
                 },
               ),
               title: Text(
-                'Settings',
+                context.l10n.t('settingsTitle'),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                   color: isDark ? Colors.white : const Color(0xFF1E293B),
                 ),
               ),
-              actions: [
-
-              ],
+              actions: [],
             ),
             body: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 12.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -71,25 +74,33 @@ class SettingsPage extends StatelessWidget {
                                       ],
                                     )
                                   : null,
-                              image: sermonProvider.profileImagePath != null &&
-                                      File(sermonProvider.profileImagePath!).existsSync()
+                              image:
+                                  sermonProvider.profileImagePath != null &&
+                                      File(
+                                        sermonProvider.profileImagePath!,
+                                      ).existsSync()
                                   ? DecorationImage(
-                                      image: FileImage(File(sermonProvider.profileImagePath!)),
+                                      image: FileImage(
+                                        File(sermonProvider.profileImagePath!),
+                                      ),
                                       fit: BoxFit.cover,
                                     )
                                   : null,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                                  color: const Color(
+                                    0xFF8B5CF6,
+                                  ).withOpacity(0.3),
                                   blurRadius: 16,
                                   offset: const Offset(0, 6),
-                                )
+                                ),
                               ],
                             ),
                             alignment: Alignment.center,
                             child: sermonProvider.profileImagePath == null
                                 ? const Icon(
-                                    Icons.add_rounded, // Sleek Minimal Cross Emblem
+                                    Icons
+                                        .add_rounded, // Sleek Minimal Cross Emblem
                                     size: 60,
                                     color: Colors.white,
                                   )
@@ -102,12 +113,14 @@ class SettingsPage extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF1E293B),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF1E293B),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '성도',
+                          context.l10n.t('memberRole'),
                           style: const TextStyle(
                             fontSize: 13,
                             color: Color(0xFF94A3B8),
@@ -128,8 +141,8 @@ class SettingsPage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: const Text(
-                            'Edit Profile',
+                          child: Text(
+                            context.l10n.t('editProfile'),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -144,19 +157,21 @@ class SettingsPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Recent Activity',
+                        context.l10n.t('recentActivity'),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1E293B),
                         ),
                       ),
                       GestureDetector(
                         onTap: () {
                           sermonProvider.setNavigationIndex(2); // 지난 요약본 탭으로 이동
                         },
-                        child: const Text(
-                          'View All',
+                        child: Text(
+                          context.l10n.t('viewAll'),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -170,8 +185,8 @@ class SettingsPage extends StatelessWidget {
                   _buildActivityCard(
                     context,
                     Icons.article_rounded,
-                    '선한 목자의 인도하심 (The Good Shepherd)',
-                    '2026-06-11 • FAITH • 요약 완료',
+                    context.l10n.t('goodShepherdTitle'),
+                    '2026-06-11 • FAITH • ${context.l10n.t('summaryComplete')}',
                     isDark ? const Color(0xFF1E1B4B) : const Color(0xFFF5F3FF),
                     HISpeakTheme.purpleMain,
                     onTap: () {
@@ -182,8 +197,8 @@ class SettingsPage extends StatelessWidget {
                   _buildActivityCard(
                     context,
                     Icons.mic_none_rounded,
-                    '오늘의 실시간 STT 설교 요약',
-                    '2026-06-08 • LIVE STT • 요약 완료',
+                    context.l10n.t('liveSttSummary'),
+                    '2026-06-08 • LIVE STT • ${context.l10n.t('summaryComplete')}',
                     isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                     isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                     onTap: () {
@@ -195,7 +210,7 @@ class SettingsPage extends StatelessWidget {
 
                   // 3. App Preferences Section
                   Text(
-                    'App Preferences',
+                    context.l10n.t('appPreferences'),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -205,24 +220,41 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E293B).withOpacity(0.85) : Colors.white,
+                      color: isDark
+                          ? const Color(0xFF1E293B).withOpacity(0.85)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFE2E8F0),
+                        color: isDark
+                            ? Colors.white.withOpacity(0.12)
+                            : const Color(0xFFE2E8F0),
                         width: 1.5,
                       ),
                     ),
                     child: Column(
                       children: [
+                        _buildPreferenceOptionRow(
+                          context,
+                          Icons.language_rounded,
+                          context.l10n.t('appLanguage'),
+                          _localizedAppLanguageName(
+                            context,
+                            sermonProvider.appLanguageCode,
+                          ),
+                          () => _showAppLanguageDialog(context, sermonProvider),
+                        ),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
                         _buildPreferenceDropdownRow(
                           context,
                           Icons.translate_rounded,
-                          'Translation Language',
+                          context.l10n.t('translationLanguage'),
                           sermonProvider.translationLanguage,
-                          ['English', 'Spanish', 'French', 'Korean', 'Chinese'],
+                          ['Korean', 'Japanese', 'French'],
                           (val) {
                             if (val != null) {
-                              sermonProvider.updateUserPreference(translationLanguage: val);
+                              sermonProvider.updateUserPreference(
+                                translationLanguage: val,
+                              );
                             }
                           },
                         ),
@@ -230,15 +262,18 @@ class SettingsPage extends StatelessWidget {
                         _buildPreferenceOptionRow(
                           context,
                           Icons.nights_stay_outlined,
-                          'Appearance',
-                          sermonProvider.appearance,
+                          context.l10n.t('appearance'),
+                          _localizedAppearanceName(
+                            context,
+                            sermonProvider.appearance,
+                          ),
                           () => _showAppearanceDialog(context, sermonProvider),
                         ),
                         const Divider(height: 1, color: Color(0xFFF1F5F9)),
                         _buildPreferenceToggleRow(
                           context,
                           Icons.psychology_outlined,
-                          '실시간 AI 연동 모드 (Gemini & STT)',
+                          context.l10n.t('realAiSetting'),
                           sermonProvider.useRealAI,
                           (val) {
                             sermonProvider.toggleRealAI(val);
@@ -248,21 +283,34 @@ class SettingsPage extends StatelessWidget {
                         _buildPreferenceOptionRow(
                           context,
                           Icons.menu_book_outlined,
-                          'Preferred Bible Version',
+                          context.l10n.t('preferredBibleVersion'),
                           sermonProvider.preferredBibleVersion,
-                          () => _showBibleVersionDialog(context, sermonProvider),
+                          () =>
+                              _showBibleVersionDialog(context, sermonProvider),
+                        ),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                        _buildPreferenceOptionRow(
+                          context,
+                          Icons.bookmark_rounded,
+                          context.l10n.t('savedVersesQuotes'),
+                          context.l10n.t('archive'),
+                          () {
+                            Navigator.pushNamed(context, '/archive');
+                          },
                         ),
                         const Divider(height: 1, color: Color(0xFFF1F5F9)),
                         _buildPreferenceOptionRow(
                           context,
                           Icons.help_outline_rounded,
-                          '도움말 / 튜토리얼 다시 보기',
-                          '시작 가이드',
+                          context.l10n.t('tutorialAgain'),
+                          context.l10n.t('startGuide'),
                           () {
                             sermonProvider.triggerTutorial();
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('홈 화면으로 이동하여 튜토리얼이 시작됩니다! 🕊️'),
+                              SnackBar(
+                                content: Text(
+                                  context.l10n.t('tutorialStartSnack'),
+                                ),
                                 duration: Duration(seconds: 2),
                               ),
                             );
@@ -281,19 +329,28 @@ class SettingsPage extends StatelessWidget {
                       Navigator.pushReplacementNamed(context, '/login');
                     },
                     icon: const Icon(Icons.logout_rounded, size: 16),
-                    label: const Text('Logout'),
+                    label: Text(context.l10n.t('logout')),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFEF2F2), // Soft pink/red background
-                      foregroundColor: const Color(0xFFEF4444), // Crimson text color
+                      backgroundColor: const Color(
+                        0xFFFEF2F2,
+                      ), // Soft pink/red background
+                      foregroundColor: const Color(
+                        0xFFEF4444,
+                      ), // Crimson text color
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 120), // Premium spacer to avoid bottom navigation overlay
+                  const SizedBox(
+                    height: 120,
+                  ), // Premium spacer to avoid bottom navigation overlay
                 ],
               ),
             ),
@@ -309,9 +366,9 @@ class SettingsPage extends StatelessWidget {
     String title,
     String subtitle,
     Color bgIconColor,
-    Color iconColor,
-    {VoidCallback? onTap}
-  ) {
+    Color iconColor, {
+    VoidCallback? onTap,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
@@ -319,10 +376,14 @@ class SettingsPage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B).withOpacity(0.85) : Colors.white,
+          color: isDark
+              ? const Color(0xFF1E293B).withOpacity(0.85)
+              : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFF1F5F9),
+            color: isDark
+                ? Colors.white.withOpacity(0.12)
+                : const Color(0xFFF1F5F9),
             width: 1.5,
           ),
         ),
@@ -356,12 +417,14 @@ class SettingsPage extends StatelessWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: 11,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -381,7 +444,11 @@ class SettingsPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), size: 20),
+          Icon(
+            icon,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            size: 20,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Text(
@@ -396,16 +463,26 @@ class SettingsPage extends StatelessWidget {
           DropdownButton<String>(
             value: currentValue,
             underline: const SizedBox(),
-            icon: Icon(Icons.keyboard_arrow_down_rounded, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), size: 18),
-            style: TextStyle(color: HISpeakTheme.purpleMain, fontWeight: FontWeight.bold, fontSize: 13),
+            icon: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              size: 18,
+            ),
+            style: TextStyle(
+              color: HISpeakTheme.purpleMain,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
             onChanged: onChanged,
             dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
             items: options.map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(
-                  value,
-                  style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1E293B)),
+                  _localizedTranslationLanguageName(context, value),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
                 ),
               );
             }).toList(),
@@ -429,7 +506,11 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
           children: [
-            Icon(icon, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), size: 20),
+            Icon(
+              icon,
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              size: 20,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
@@ -446,13 +527,21 @@ class SettingsPage extends StatelessWidget {
                 Text(
                   currentValue,
                   style: TextStyle(
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B),
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(width: 4),
-                Icon(Icons.arrow_forward_ios_rounded, color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8), size: 12),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: isDark
+                      ? const Color(0xFF64748B)
+                      : const Color(0xFF94A3B8),
+                  size: 12,
+                ),
               ],
             ),
           ],
@@ -473,7 +562,11 @@ class SettingsPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), size: 20),
+          Icon(
+            icon,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            size: 20,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Text(
@@ -495,19 +588,94 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
+  String _localizedAppLanguageName(BuildContext context, String code) {
+    switch (code) {
+      case 'ja':
+        return '日本語';
+      case 'fr':
+        return 'Français';
+      default:
+        return '한국어';
+    }
+  }
+
+  String _localizedTranslationLanguageName(BuildContext context, String value) {
+    switch (value) {
+      case 'Korean':
+        return context.l10n.t('korean');
+      case 'Japanese':
+        return context.l10n.t('japanese');
+      case 'French':
+        return context.l10n.t('french');
+      default:
+        return value;
+    }
+  }
+
+  String _localizedAppearanceName(BuildContext context, String appearance) {
+    final code = context.l10n.languageCode;
+    final labels = {
+      'ko': {
+        'System Default': '시스템 기본값',
+        'Light Mode': '라이트 모드',
+        'Dark Mode': '다크 모드',
+      },
+      'ja': {
+        'System Default': 'システム設定',
+        'Light Mode': 'ライトモード',
+        'Dark Mode': 'ダークモード',
+      },
+      'fr': {
+        'System Default': 'Par défaut',
+        'Light Mode': 'Mode clair',
+        'Dark Mode': 'Mode sombre',
+      },
+    };
+    return labels[code]?[appearance] ?? appearance;
+  }
+
+  void _showAppLanguageDialog(BuildContext context, SermonProvider provider) {
+    final options = {'ko': '한국어', 'ja': '日本語', 'fr': 'Français'};
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.l10n.t('appLanguage')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: options.entries.map((entry) {
+              return ListTile(
+                title: Text(entry.value),
+                trailing: provider.appLanguageCode == entry.key
+                    ? const Icon(Icons.check, color: Color(0xFF2F69F8))
+                    : null,
+                onTap: () {
+                  provider.updateUserPreference(appLanguageCode: entry.key);
+                  Navigator.pop(context);
+                },
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
   // Preference selection Dialogs
   void _showAppearanceDialog(BuildContext context, SermonProvider provider) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Select Appearance'),
+          title: Text(context.l10n.t('selectAppearance')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: ['System Default', 'Light Mode', 'Dark Mode'].map((opt) {
               return ListTile(
-                title: Text(opt),
-                trailing: provider.appearance == opt ? const Icon(Icons.check, color: Color(0xFF2F69F8)) : null,
+                title: Text(_localizedAppearanceName(context, opt)),
+                trailing: provider.appearance == opt
+                    ? const Icon(Icons.check, color: Color(0xFF2F69F8))
+                    : null,
                 onTap: () {
                   provider.updateUserPreference(appearance: opt);
                   Navigator.pop(context);
@@ -525,19 +693,26 @@ class SettingsPage extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Preferred Bible Version'),
+          title: Text(context.l10n.t('preferredBibleVersion')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: ['NIV', 'ESV', 'KJV', 'NASB', '개역개정'].map((opt) {
-              return ListTile(
-                title: Text(opt),
-                trailing: provider.preferredBibleVersion == opt ? const Icon(Icons.check, color: Color(0xFF2F69F8)) : null,
-                onTap: () {
-                  provider.updateUserPreference(preferredBibleVersion: opt);
-                  Navigator.pop(context);
-                },
-              );
-            }).toList(),
+            children:
+                [
+                  '한영대조',
+                  'Korean Revised Version 1952/1961',
+                  'World English Bible',
+                ].map((opt) {
+                  return ListTile(
+                    title: Text(opt),
+                    trailing: provider.preferredBibleVersion == opt
+                        ? const Icon(Icons.check, color: Color(0xFF2F69F8))
+                        : null,
+                    onTap: () {
+                      provider.updateUserPreference(preferredBibleVersion: opt);
+                      Navigator.pop(context);
+                    },
+                  );
+                }).toList(),
           ),
         );
       },
@@ -550,69 +725,26 @@ class SettingsPage extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Edit Profile Name'),
+          title: Text(context.l10n.t('editProfileName')),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(labelText: 'Display Name'),
+            decoration: InputDecoration(
+              labelText: context.l10n.t('displayName'),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.t('cancel')),
             ),
             TextButton(
               onPressed: () {
-                provider.updateUserPreference(displayName: controller.text.trim());
-                Navigator.pop(context);
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showGeminiKeyDialog(BuildContext context, SermonProvider provider) {
-    final controller = TextEditingController(text: provider.customGeminiApiKey);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Gemini API Key 설정'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Google AI Studio에서 발급받은 본인의 Gemini API Key를 입력하시면, 무료 쿼터 제한 없이 실시간 음성 번역 및 설교 요약 기능을 제한 없이 이용하실 수 있습니다.',
-                style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'Gemini API Key',
-                  hintText: 'AIzaSy...',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                provider.updateUserPreference(geminiApiKey: controller.text.trim());
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Gemini API Key가 안전하게 저장되었습니다! 🔑')),
+                provider.updateUserPreference(
+                  displayName: controller.text.trim(),
                 );
                 Navigator.pop(context);
               },
-              child: const Text('Save'),
+              child: Text(context.l10n.t('save')),
             ),
           ],
         );
@@ -632,14 +764,14 @@ class SettingsPage extends StatelessWidget {
       if (image != null) {
         await provider.updateUserPreference(profileImagePath: image.path);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile image updated! 📸')),
+          SnackBar(content: Text(context.l10n.t('profileImageUpdated'))),
         );
       }
     } catch (e) {
       print("Error picking image: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
     }
   }
 }

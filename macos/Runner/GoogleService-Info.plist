@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>241632718216-avaf2f3ch5nnrq6ubsvr84clgmcfk01b.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.241632718216-avaf2f3ch5nnrq6ubsvr84clgmcfk01b</string>
 	<key>API_KEY</key>
 	<string>AIzaSyAkb2J9_A0v2ujeNkvn8K8byaBeoLNhMzw</string>
 	<key>GCM_SENDER_ID</key>
@@ -9,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.mobileAppFinal</string>
+	<string>com.hispeak.app</string>
 	<key>PROJECT_ID</key>
 	<string>god-speak-ai</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,7 +29,7 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:241632718216:ios:71ed0f3ee6c09a3e635e3d</string>
+	<string>1:241632718216:ios:e7f124be9f8f3a2f635e3d</string>
 	<key>DATABASE_URL</key>
 	<string>https://god-speak-ai-default-rtdb.firebaseio.com</string>
 </dict>

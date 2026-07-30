@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import 'home.dart';
 import 'bible_page.dart';
 import 'summaries.dart';
-import 'archive.dart';
+import 'church_finder.dart';
+import 'community_page.dart';
 import 'settings.dart';
 import 'theme.dart';
 import 'state/sermon_provider.dart';
+import 'l10n/hispeak_localizations.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -23,7 +25,8 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     const HomePage(),
     const BiblePage(),
     const SummariesPage(),
-    const ArchivePage(),
+    const ChurchFinderPage(),
+    const CommunityPage(),
     const SettingsPage(),
   ];
 
@@ -67,7 +70,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
-                  color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF1F5F9),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.08)
+                      : const Color(0xFFF1F5F9),
                   width: 1.5,
                 ),
               ),
@@ -80,73 +85,86 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               type: BottomNavigationBarType.fixed,
               backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
               selectedItemColor: HISpeakTheme.purpleMain, // Active Purple
-              unselectedItemColor: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8), // Muted Gray-Blue
+              unselectedItemColor: isDark
+                  ? const Color(0xFF64748B)
+                  : const Color(0xFF94A3B8), // Muted Gray-Blue
               selectedLabelStyle: const TextStyle(
-                fontSize: 12,
+                fontSize: 10,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Inter',
               ),
               unselectedLabelStyle: const TextStyle(
-                fontSize: 12,
+                fontSize: 10,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Inter',
               ),
               elevation: 0,
-              items: const [
+              items: [
                 BottomNavigationBarItem(
-                  icon: Padding(
+                  icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Icon(Icons.home_outlined),
                   ),
-                  activeIcon: Padding(
+                  activeIcon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Icon(Icons.home_rounded),
                   ),
-                  label: '홈',
+                  label: context.l10n.t('home'),
                 ),
                 BottomNavigationBarItem(
-                  icon: Padding(
+                  icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Icon(Icons.menu_book_outlined),
                   ),
-                  activeIcon: Padding(
+                  activeIcon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Icon(Icons.menu_book_rounded),
                   ),
-                  label: '성경',
+                  label: context.l10n.t('bible'),
                 ),
                 BottomNavigationBarItem(
-                  icon: Padding(
+                  icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Icon(Icons.article_outlined),
                   ),
-                  activeIcon: Padding(
+                  activeIcon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Icon(Icons.article_rounded),
                   ),
-                  label: '지난 요약본',
+                  label: context.l10n.t('summaries'),
                 ),
                 BottomNavigationBarItem(
-                  icon: Padding(
+                  icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
-                    child: Icon(Icons.bookmark_outline_rounded),
+                    child: Icon(Icons.travel_explore_rounded),
                   ),
-                  activeIcon: Padding(
+                  activeIcon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
-                    child: Icon(Icons.bookmark_rounded),
+                    child: Icon(Icons.travel_explore_rounded),
                   ),
-                  label: '보관된 구절',
+                  label: context.l10n.t('church'),
                 ),
                 BottomNavigationBarItem(
-                  icon: Padding(
+                  icon: const Padding(
+                    padding: EdgeInsets.only(bottom: 4),
+                    child: Icon(Icons.groups_2_outlined),
+                  ),
+                  activeIcon: const Padding(
+                    padding: EdgeInsets.only(bottom: 4),
+                    child: Icon(Icons.groups_2_rounded),
+                  ),
+                  label: context.l10n.t('community'),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Icon(Icons.settings_outlined),
                   ),
-                  activeIcon: Padding(
+                  activeIcon: const Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Icon(Icons.settings_rounded),
                   ),
-                  label: '설정',
+                  label: context.l10n.t('settings'),
                 ),
               ],
             ),
@@ -188,21 +206,25 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'HISpeak에 오신 것을 환영합니다! 🕊️',
+              '${context.l10n.t('tourWelcomeTitle')} 🕊️',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF5B21B6),
+                color: isDark
+                    ? const Color(0xFFDDD6FE)
+                    : const Color(0xFF5B21B6),
                 fontFamily: 'Inter',
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              '안녕하세요! 앱 시작하기가 처음이시죠?\n예배의 말씀에 더 집중하실 수 있도록 주요 핵심 기능과 앱의 흐름을 빠르게 안내해 드릴게요!',
+              context.l10n.t('tourWelcomeDesc'),
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                color: isDark
+                    ? const Color(0xFFE2E8F0)
+                    : const Color(0xFF334155),
                 height: 1.6,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Inter',
@@ -227,16 +249,20 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               children: [
                 Icon(
                   Icons.auto_awesome_rounded,
-                  color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                  color: isDark
+                      ? const Color(0xFFC4B5FD)
+                      : const Color(0xFF6D28D9),
                   size: 22,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '1. 말씀 & 인용구 롤링 배너',
+                  context.l10n.t('tourBannerTitle'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF5B21B6),
+                    color: isDark
+                        ? const Color(0xFFDDD6FE)
+                        : const Color(0xFF5B21B6),
                     fontFamily: 'Inter',
                   ),
                 ),
@@ -244,10 +270,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '은혜받아 보관함에 즐겨찾기 해둔 성경 구절과 설교 핵심 인용구들이 홈 화면 상단 배너에 아름다운 슬라이더 카드로 자동 로드되며 롤링됩니다.\n\n매일 새로운 말씀과 묵상으로 은혜롭게 하루를 시작해 보세요.',
+              context.l10n.t('tourBannerDesc'),
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                color: isDark
+                    ? const Color(0xFFE2E8F0)
+                    : const Color(0xFF334155),
                 height: 1.5,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Inter',
@@ -271,16 +299,20 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               children: [
                 Icon(
                   Icons.wifi_rounded,
-                  color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                  color: isDark
+                      ? const Color(0xFFC4B5FD)
+                      : const Color(0xFF6D28D9),
                   size: 22,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '2. 실시간 네트워크 상태 감지',
+                  context.l10n.t('tourNetworkTitle'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF5B21B6),
+                    color: isDark
+                        ? const Color(0xFFDDD6FE)
+                        : const Color(0xFF5B21B6),
                     fontFamily: 'Inter',
                   ),
                 ),
@@ -288,10 +320,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '인터넷 연결이 불안정하거나 끊어지면 상단에 노란색 경고바가 즉시 나타납니다.\n\n앱이 상태를 실시간 모니터링하여, 오프라인 시에도 시뮬레이터 안전 모드로 전환되어 안심하고 사용하실 수 있습니다.',
+              context.l10n.t('tourNetworkDesc'),
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                color: isDark
+                    ? const Color(0xFFE2E8F0)
+                    : const Color(0xFF334155),
                 height: 1.5,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Inter',
@@ -314,16 +348,20 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               children: [
                 Icon(
                   Icons.translate_rounded,
-                  color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                  color: isDark
+                      ? const Color(0xFFC4B5FD)
+                      : const Color(0xFF6D28D9),
                   size: 22,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '3. 실시간 예배 번역 및 녹음',
+                  context.l10n.t('tourLiveTitle'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF5B21B6),
+                    color: isDark
+                        ? const Color(0xFFDDD6FE)
+                        : const Color(0xFF5B21B6),
                     fontFamily: 'Inter',
                   ),
                 ),
@@ -331,10 +369,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '가운데 십자가 마이크 버튼을 터치하여 녹음을 시작해 보세요.\n목사님의 말씀이 실시간 기록되며, 영어 동시 번역본이 화면에 실시간으로 생성됩니다.\n\n지금 \'다음\'을 누르면 가상 설교 번역 시뮬레이션이 시작됩니다!',
+              context.l10n.t('tourLiveDesc'),
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                color: isDark
+                    ? const Color(0xFFE2E8F0)
+                    : const Color(0xFF334155),
                 height: 1.5,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Inter',
@@ -358,16 +398,20 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               children: [
                 Icon(
                   Icons.cloud_done_rounded,
-                  color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                  color: isDark
+                      ? const Color(0xFFC4B5FD)
+                      : const Color(0xFF6D28D9),
                   size: 22,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '6. 설교 종료 후 자동 저장 및 요약',
+                  context.l10n.t('tourSummaryTitle'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF5B21B6),
+                    color: isDark
+                        ? const Color(0xFFDDD6FE)
+                        : const Color(0xFF5B21B6),
                     fontFamily: 'Inter',
                   ),
                 ),
@@ -375,10 +419,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '설교가 종료되면 AI가 대본을 분석하여 핵심 요약, 관련 성경 구절, 삶의 적용점, 기도 제목을 자동으로 생성하여 보여줍니다.\n\n하단의 \'수정 / 코멘트 추가\' 버튼을 눌러 나만의 묵상 메모를 직접 작성할 수도 있습니다!',
+              context.l10n.t('tourSummaryDesc'),
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                color: isDark
+                    ? const Color(0xFFE2E8F0)
+                    : const Color(0xFF334155),
                 height: 1.5,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Inter',
@@ -401,16 +447,20 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               children: [
                 Icon(
                   Icons.menu_book_rounded,
-                  color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                  color: isDark
+                      ? const Color(0xFFC4B5FD)
+                      : const Color(0xFF6D28D9),
                   size: 22,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '7. 한영 대조 성경 읽기 & 보관',
+                  context.l10n.t('tourBibleTitle'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF5B21B6),
+                    color: isDark
+                        ? const Color(0xFFDDD6FE)
+                        : const Color(0xFF5B21B6),
                     fontFamily: 'Inter',
                   ),
                 ),
@@ -418,10 +468,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '성경 탭에서는 개역개정과 영어 성경(ESV)을 대조해가며 은혜롭게 통독할 수 있습니다.\n\n은혜로운 구절을 길게 누르면 보관함으로 간편하게 스크랩해 둘 수 있습니다.',
+              context.l10n.t('tourBibleDesc'),
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                color: isDark
+                    ? const Color(0xFFE2E8F0)
+                    : const Color(0xFF334155),
                 height: 1.5,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Inter',
@@ -444,16 +496,20 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               children: [
                 Icon(
                   Icons.archive_rounded,
-                  color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
+                  color: isDark
+                      ? const Color(0xFFC4B5FD)
+                      : const Color(0xFF6D28D9),
                   size: 22,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '8. 설교 기록 아카이브',
+                  context.l10n.t('tourExploreTitle'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF5B21B6),
+                    color: isDark
+                        ? const Color(0xFFDDD6FE)
+                        : const Color(0xFF5B21B6),
                     fontFamily: 'Inter',
                   ),
                 ),
@@ -461,10 +517,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '지난 요약본 탭에서는 지금까지 저장된 모든 설교 요약 기록을 한눈에 관리하고 언제든지 다시 열어볼 수 있습니다.\n\n이제 튜토리얼을 마치고 HISpeak의 모든 기능을 직접 경험해 보세요!',
+              context.l10n.t('tourExploreDesc'),
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                color: isDark
+                    ? const Color(0xFFE2E8F0)
+                    : const Color(0xFF334155),
                 height: 1.5,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Inter',
@@ -492,8 +550,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
               child: Container(
                 color: isDark
-                    ? const Color(0xFF0F0A1C).withOpacity(0.85) // Dark purple tint
-                    : const Color(0xFF2E1A47).withOpacity(0.55), // Deep purple tint in light mode
+                    ? const Color(0xFF0F0A1C).withOpacity(
+                        0.85,
+                      ) // Dark purple tint
+                    : const Color(
+                        0xFF2E1A47,
+                      ).withOpacity(0.55), // Deep purple tint in light mode
               ),
             ),
           ),
@@ -518,10 +580,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                         : [Colors.white, const Color(0xFFF5F3FF)],
                   ),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: const Color(0xFF8B5CF6),
-                    width: 2,
-                  ),
+                  border: Border.all(color: const Color(0xFF8B5CF6), width: 2),
                   boxShadow: [
                     BoxShadow(
                       color: isDark
@@ -542,21 +601,33 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF8B5CF6).withOpacity(0.2) : const Color(0xFFF3F0FF),
+                            color: isDark
+                                ? const Color(0xFF8B5CF6).withOpacity(0.2)
+                                : const Color(0xFFF3F0FF),
                             borderRadius: BorderRadius.circular(100),
                             border: Border.all(
-                              color: isDark ? const Color(0xFFA78BFA) : const Color(0xFFC4B5FD),
+                              color: isDark
+                                  ? const Color(0xFFA78BFA)
+                                  : const Color(0xFFC4B5FD),
                               width: 1,
                             ),
                           ),
                           child: Text(
-                            '안내 ${provider.tutorialStep + 1} / 9',
+                            context.l10n.format('guideStep', {
+                              'step': '${provider.tutorialStep + 1}',
+                              'total': '9',
+                            }),
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF6D28D9),
+                              color: isDark
+                                  ? const Color(0xFFDDD6FE)
+                                  : const Color(0xFF6D28D9),
                               fontFamily: 'Inter',
                             ),
                           ),
@@ -568,10 +639,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                           },
                           icon: Icon(
                             Icons.close_rounded,
-                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                             size: 20,
                           ),
-                          tooltip: '튜토리얼 건너뛰기',
+                          tooltip: context.l10n.t('skipTutorial'),
                           constraints: const BoxConstraints(),
                           padding: EdgeInsets.zero,
                         ),
@@ -605,12 +678,17 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                               }
                             },
                             style: TextButton.styleFrom(
-                              foregroundColor: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF6D28D9),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              foregroundColor: isDark
+                                  ? const Color(0xFFC4B5FD)
+                                  : const Color(0xFF6D28D9),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                             ),
-                            child: const Text(
-                              '이전',
-                              style: TextStyle(
+                            child: Text(
+                              context.l10n.t('previous'),
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
@@ -623,12 +701,17 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                               provider.completeTutorial();
                             },
                             style: TextButton.styleFrom(
-                              foregroundColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              foregroundColor: isDark
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF64748B),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                             ),
-                            child: const Text(
-                              '건너뛰기',
-                              style: TextStyle(
+                            child: Text(
+                              context.l10n.t('skip'),
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                                 fontFamily: 'Inter',
@@ -642,8 +725,14 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                             borderRadius: BorderRadius.circular(14),
                             gradient: LinearGradient(
                               colors: isDark
-                                  ? [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)]
-                                  : [const Color(0xFF7C3AED), const Color(0xFF9061F9)],
+                                  ? [
+                                      const Color(0xFF8B5CF6),
+                                      const Color(0xFFA78BFA),
+                                    ]
+                                  : [
+                                      const Color(0xFF7C3AED),
+                                      const Color(0xFF9061F9),
+                                    ],
                             ),
                             boxShadow: [
                               BoxShadow(
@@ -691,7 +780,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  provider.tutorialStep == 8 ? '시작하기 🎉' : '다음 기능',
+                                  provider.tutorialStep == 8
+                                      ? '${context.l10n.t('getStarted')} 🎉'
+                                      : context.l10n.t('nextFeature'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -700,7 +791,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                                 ),
                                 if (provider.tutorialStep < 8) ...[
                                   const SizedBox(width: 4),
-                                  const Icon(Icons.arrow_forward_rounded, size: 16),
+                                  const Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 16,
+                                  ),
                                 ],
                               ],
                             ),
@@ -738,17 +832,22 @@ class SpotlightClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
-    final path = Path()
-      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final path = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
     if (!noSpotlight) {
       if (isCircle) {
         path.addOval(Rect.fromCircle(center: spotlightOffset, radius: radius));
       } else {
-        path.addRRect(RRect.fromRectAndRadius(
-          Rect.fromCenter(center: spotlightOffset, width: width, height: height),
-          const Radius.circular(16),
-        ));
+        path.addRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: spotlightOffset,
+              width: width,
+              height: height,
+            ),
+            const Radius.circular(16),
+          ),
+        );
       }
     }
 

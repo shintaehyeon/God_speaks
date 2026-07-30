@@ -1,4 +1,4 @@
-package com.example.mobile_app_final
+package com.hispeak.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -53,7 +53,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCG3fh2O2nnk1sB1_qL8eBc91miqDGj420',
-    appId: '1:241632718216:android:f75aa23a9b1c0b11635e3d',
+    appId: '1:241632718216:android:8f547261da8743f7635e3d',
     messagingSenderId: '241632718216',
     projectId: 'god-speak-ai',
     databaseURL: 'https://god-speak-ai-default-rtdb.firebaseio.com',
@@ -61,21 +61,23 @@ class DefaultFirebaseOptions {
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAkb2J9_A0v2ujeNkvn8K8byaBeoLNhMzw',
-    appId: '1:241632718216:ios:71ed0f3ee6c09a3e635e3d',
+    appId: '1:241632718216:ios:e7f124be9f8f3a2f635e3d',
     messagingSenderId: '241632718216',
     projectId: 'god-speak-ai',
     databaseURL: 'https://god-speak-ai-default-rtdb.firebaseio.com',
     storageBucket: 'god-speak-ai.firebasestorage.app',
-    iosBundleId: 'com.example.mobileAppFinal',
+    iosClientId: '241632718216-avaf2f3ch5nnrq6ubsvr84clgmcfk01b.apps.googleusercontent.com',
+    iosBundleId: 'com.hispeak.app',
   );
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyAkb2J9_A0v2ujeNkvn8K8byaBeoLNhMzw',
-    appId: '1:241632718216:ios:71ed0f3ee6c09a3e635e3d',
+    appId: '1:241632718216:ios:e7f124be9f8f3a2f635e3d',
     messagingSenderId: '241632718216',
     projectId: 'god-speak-ai',
     databaseURL: 'https://god-speak-ai-default-rtdb.firebaseio.com',
     storageBucket: 'god-speak-ai.firebasestorage.app',
-    iosBundleId: 'com.example.mobileAppFinal',
+    iosClientId: '241632718216-avaf2f3ch5nnrq6ubsvr84clgmcfk01b.apps.googleusercontent.com',
+    iosBundleId: 'com.hispeak.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

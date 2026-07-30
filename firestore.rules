@@ -13,13 +13,31 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function isValidUserRole(role) {
+      return role == "성도 (Member)"
+        || role == "게스트 성도 (Guest)"
+        || role == "👑 프리미엄 멤버 (Premium Tier)"
+        || role == "일반 게스트 멤버 (Free Tier)"
+        || role == "👑 프리미엄 데모 (Premium Demo)";
+    }
+
+    function isPremiumRole(role) {
+      return role == "👑 프리미엄 멤버 (Premium Tier)"
+        || role == "👑 프리미엄 데모 (Premium Demo)";
+    }
+
+    function isGroupMember(groupId) {
+      return isAuthenticated()
+        && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.memberIds;
+    }
+
     // Rules for 'users' collection
     match /users/{userId} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId) 
         && request.resource.data.displayName is string
         && request.resource.data.userRole is string
-        && (request.resource.data.userRole == "👑 프리미엄 멤버 (Premium Tier)" || request.resource.data.userRole == "일반 게스트 멤버 (Free Tier)" || request.resource.data.userRole == "👑 프리미엄 데모 (Premium Demo)")
+        && isValidUserRole(request.resource.data.userRole)
         && request.resource.data.email is string
         && request.resource.data.translationCount is int
         && request.resource.data.translationCount == 0;
@@ -27,10 +45,10 @@ service cloud.firestore {
       allow update: if isOwner(userId)
         && request.resource.data.displayName is string
         && request.resource.data.userRole is string
-        && (request.resource.data.userRole == "👑 프리미엄 멤버 (Premium Tier)" || request.resource.data.userRole == "일반 게스트 멤버 (Free Tier)" || request.resource.data.userRole == "👑 프리미엄 데모 (Premium Demo)")
+        && isValidUserRole(request.resource.data.userRole)
         && request.resource.data.translationCount is int
         // Guest limit max 5 validation on the server-side for robust security!
-        && (request.resource.data.userRole.contains("👑") || request.resource.data.translationCount <= 5)
+        && (isPremiumRole(request.resource.data.userRole) || request.resource.data.translationCount <= 5)
         // Resource exhaustion / string length limit
         && request.resource.data.displayName.size() < 100;
         
@@ -44,22 +62,140 @@ service cloud.firestore {
 
     // Rules for 'summaries' collection
     match /summaries/{summaryId} {
-      allow read: if isAuthenticated() && (resource.data.userId == null || resource.data.userId == request.auth.uid);
-      allow create: if isAuthenticated() 
-        && request.resource.data.title is string 
-        && request.resource.data.title.size() < 200
-        && (request.resource.data.userId == null || request.resource.data.userId == request.auth.uid);
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() < 200;
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
     }
 
     // Rules for 'archives' collection
     match /archives/{archiveId} {
-      allow read: if isAuthenticated();
-      // Allow creation/writing only by authenticated users (client needs to seed this during initial setup)
-      allow create, update: if isAuthenticated()
+      allow read: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
         && request.resource.data.title is string
-        && request.resource.data.title.size() < 200;
-      allow delete: if false; // Standard users cannot delete public archives
+        && request.resource.data.title.size() < 200
+        && request.resource.data.type in ["verse", "quote"];
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.title is string
+        && request.resource.data.title.size() < 200
+        && request.resource.data.type in ["verse", "quote"];
+      allow delete: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Public church directory with user-submitted moderation queue
+    match /churches/{churchId} {
+      allow read: if isAuthenticated()
+        && (resource.data.status == "approved"
+          || resource.data.submittedBy == request.auth.uid);
+
+      allow create: if isAuthenticated()
+        && request.resource.data.submittedBy == request.auth.uid
+        && request.resource.data.status == "pending"
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 1
+        && request.resource.data.name.size() < 120
+        && request.resource.data.address is string
+        && request.resource.data.address.size() > 3
+        && request.resource.data.address.size() < 300
+        && request.resource.data.denomination is string
+        && request.resource.data.denomination.size() < 80
+        && request.resource.data.city is string
+        && request.resource.data.city.size() < 80
+        && request.resource.data.country is string
+        && request.resource.data.country.size() < 80
+        && request.resource.data.note is string
+        && request.resource.data.note.size() < 500
+        && request.resource.data.languages is list
+        && request.resource.data.languages.size() <= 8
+        && request.resource.data.worshipTimes is list
+        && request.resource.data.worshipTimes.size() <= 12;
+
+      allow update: if isAuthenticated()
+        && resource.data.submittedBy == request.auth.uid
+        && resource.data.status == "pending"
+        && request.resource.data.submittedBy == resource.data.submittedBy
+        && request.resource.data.status == "pending"
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 1
+        && request.resource.data.name.size() < 120
+        && request.resource.data.note is string
+        && request.resource.data.note.size() < 500;
+
+      allow delete: if false;
+    }
+
+    // Family/community Bible reading groups
+    match /groups/{groupId} {
+      allow get: if isAuthenticated();
+      allow list: if isAuthenticated()
+        && request.auth.uid in resource.data.memberIds;
+
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 1
+        && request.resource.data.name.size() < 80
+        && request.resource.data.inviteCode is string
+        && request.resource.data.inviteCode.size() >= 6
+        && request.resource.data.memberIds is list
+        && request.auth.uid in request.resource.data.memberIds
+        && request.resource.data.memberIds.size() == 1;
+
+      allow update: if isAuthenticated()
+        && (resource.data.ownerId == request.auth.uid
+          || (
+            !(request.auth.uid in resource.data.memberIds)
+            && request.auth.uid in request.resource.data.memberIds
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["memberIds", "updatedAt"])
+            && request.resource.data.memberIds.size() == resource.data.memberIds.size() + 1
+          ));
+      allow delete: if isAuthenticated()
+        && resource.data.ownerId == request.auth.uid;
+
+      match /members/{memberId} {
+        allow read: if isGroupMember(groupId);
+        allow create, update: if isAuthenticated()
+          && memberId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() < 100
+          && request.resource.data.currentBook is string
+          && request.resource.data.currentBook.size() < 40
+          && request.resource.data.currentChapter is int
+          && request.resource.data.currentChapter >= 1
+          && request.resource.data.progressPercent is number
+          && request.resource.data.progressPercent >= 0
+          && request.resource.data.progressPercent <= 1;
+        allow delete: if isAuthenticated()
+          && memberId == request.auth.uid;
+      }
+
+      match /qtPosts/{postId} {
+        allow read: if isGroupMember(groupId);
+        allow create: if isGroupMember(groupId)
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.authorName is string
+          && request.resource.data.authorName.size() < 100
+          && request.resource.data.content is string
+          && request.resource.data.content.size() > 0
+          && request.resource.data.content.size() < 1200
+          && request.resource.data.verseRef is string
+          && request.resource.data.verseRef.size() < 80;
+        allow update, delete: if isGroupMember(groupId)
+          && resource.data.authorId == request.auth.uid;
+      }
     }
   }
 }

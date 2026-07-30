@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'models/bible.dart';
 import 'services/bible_repository.dart';
 import 'state/sermon_provider.dart';
+import 'l10n/hispeak_localizations.dart';
 
 class BiblePage extends StatefulWidget {
   const BiblePage({super.key});
@@ -42,13 +43,13 @@ class _BiblePageState extends State<BiblePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('성경'),
+        title: Text(context.l10n.t('bible')),
         actions: [
           FutureBuilder<BibleLibrary>(
             future: _libraryFuture,
             builder: (context, snapshot) {
               return IconButton(
-                tooltip: '출처',
+                tooltip: context.l10n.t('source'),
                 onPressed: snapshot.hasData
                     ? () => _showSourceSheet(context, snapshot.data!)
                     : null,
@@ -67,7 +68,9 @@ class _BiblePageState extends State<BiblePage> {
 
           if (snapshot.hasError || !snapshot.hasData) {
             return _ErrorState(
-              message: snapshot.error?.toString() ?? '성경 데이터를 불러오지 못했습니다.',
+              message:
+                  snapshot.error?.toString() ??
+                  context.l10n.t('bibleLoadFailed'),
             );
           }
 
@@ -178,13 +181,16 @@ class _BiblePageState extends State<BiblePage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '성경 데이터',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  context.l10n.t('bibleData'),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _SourceBlock(
-                  title: '한국어',
+                  title: context.l10n.t('korean'),
                   translation:
                       '${library.korean.translation} (${library.korean.abbreviation})',
                   license: library.korean.license,
@@ -192,16 +198,16 @@ class _BiblePageState extends State<BiblePage> {
                 ),
                 const SizedBox(height: 12),
                 _SourceBlock(
-                  title: 'English',
+                  title: context.l10n.t('english'),
                   translation:
                       '${library.english.translation} (${library.english.abbreviation})',
                   license: library.english.license,
                   source: library.english.source,
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  '한국어 본문은 Korean Revised Version 1952/1961 계열이며 개역개정이 아닙니다.',
-                  style: TextStyle(
+                Text(
+                  context.l10n.t('bibleSourceNote'),
+                  style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF64748B),
                     height: 1.5,
@@ -271,21 +277,21 @@ class _BibleControls extends StatelessWidget {
             onSelectionChanged: (selected) {
               onViewModeChanged(selected.first);
             },
-            segments: const [
+            segments: [
               ButtonSegment<BibleViewMode>(
                 value: BibleViewMode.korean,
-                icon: Icon(Icons.translate_rounded, size: 18),
-                label: Text('한국어'),
+                icon: const Icon(Icons.translate_rounded, size: 18),
+                label: Text(context.l10n.t('korean')),
               ),
               ButtonSegment<BibleViewMode>(
                 value: BibleViewMode.english,
-                icon: Icon(Icons.language_rounded, size: 18),
-                label: Text('English'),
+                icon: const Icon(Icons.language_rounded, size: 18),
+                label: Text(context.l10n.t('english')),
               ),
               ButtonSegment<BibleViewMode>(
                 value: BibleViewMode.parallel,
-                icon: Icon(Icons.view_agenda_outlined, size: 18),
-                label: Text('한영'),
+                icon: const Icon(Icons.view_agenda_outlined, size: 18),
+                label: Text(context.l10n.t('parallel')),
               ),
             ],
           ),
@@ -299,7 +305,7 @@ class _BibleControls extends StatelessWidget {
                   isExpanded: true,
                   decoration: _fieldDecoration(
                     context,
-                    label: '권',
+                    label: context.l10n.t('book'),
                     icon: Icons.menu_book_rounded,
                   ),
                   items: List.generate(
@@ -328,14 +334,14 @@ class _BibleControls extends StatelessWidget {
                   isExpanded: true,
                   decoration: _fieldDecoration(
                     context,
-                    label: '장',
+                    label: context.l10n.t('chapter'),
                     icon: Icons.format_list_numbered_rounded,
                   ),
                   items: List.generate(
                     chapterCount,
                     (index) => DropdownMenuItem<int>(
                       value: index,
-                      child: Text('${index + 1}장'),
+                      child: Text(_chapterLabel(context, index + 1)),
                     ),
                   ),
                   onChanged: (value) {
@@ -355,13 +361,13 @@ class _BibleControls extends StatelessWidget {
             decoration:
                 _fieldDecoration(
                   context,
-                  label: '구절 검색',
+                  label: context.l10n.t('searchVerse'),
                   icon: Icons.search_rounded,
                 ).copyWith(
                   suffixIcon: query.isEmpty
                       ? null
                       : IconButton(
-                          tooltip: '검색 지우기',
+                          tooltip: context.l10n.t('clearSearch'),
                           onPressed: onClearQuery,
                           icon: const Icon(Icons.close_rounded),
                         ),
@@ -370,6 +376,17 @@ class _BibleControls extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _chapterLabel(BuildContext context, int chapter) {
+    switch (context.l10n.languageCode) {
+      case 'fr':
+        return '${context.l10n.t('chapter')} $chapter';
+      case 'ja':
+        return '$chapter${context.l10n.t('chapter')}';
+      default:
+        return '$chapter${context.l10n.t('chapter')}';
+    }
   }
 
   InputDecoration _fieldDecoration(
@@ -437,12 +454,13 @@ class _ChapterVerseList extends StatelessWidget {
         if (index == 0) {
           return _ChapterHeader(
             title: _chapterTitle(
+              context,
               koreanBook.name,
               englishBook.name,
               koreanChapter.number,
               viewMode,
             ),
-            subtitle: viewMode.label,
+            subtitle: _viewModeLabel(context, viewMode),
           );
         }
 
@@ -460,19 +478,41 @@ class _ChapterVerseList extends StatelessWidget {
     );
   }
 
+  String _viewModeLabel(BuildContext context, BibleViewMode mode) {
+    switch (mode) {
+      case BibleViewMode.korean:
+        return context.l10n.t('korean');
+      case BibleViewMode.english:
+        return context.l10n.t('english');
+      case BibleViewMode.parallel:
+        return context.l10n.t('parallel');
+    }
+  }
+
   String _chapterTitle(
+    BuildContext context,
     String koreanBook,
     String englishBook,
     int chapter,
     BibleViewMode mode,
   ) {
+    final chapterLabel = _chapterNumberLabel(context, chapter);
     switch (mode) {
       case BibleViewMode.korean:
-        return '$koreanBook $chapter장';
+        return '$koreanBook $chapterLabel';
       case BibleViewMode.english:
         return '$englishBook $chapter';
       case BibleViewMode.parallel:
-        return '$koreanBook / $englishBook $chapter장';
+        return '$koreanBook / $englishBook $chapterLabel';
+    }
+  }
+
+  String _chapterNumberLabel(BuildContext context, int chapter) {
+    switch (context.l10n.languageCode) {
+      case 'fr':
+        return '${context.l10n.t('chapter')} $chapter';
+      default:
+        return '$chapter${context.l10n.t('chapter')}';
     }
   }
 }
@@ -496,9 +536,9 @@ class _SearchResultsList extends StatelessWidget {
     final results = library.search(query, viewMode);
 
     if (results.isEmpty) {
-      return const _EmptyState(
+      return _EmptyState(
         icon: Icons.search_off_rounded,
-        title: '검색 결과 없음',
+        title: context.l10n.t('noSearchResults'),
       );
     }
 
@@ -507,7 +547,12 @@ class _SearchResultsList extends StatelessWidget {
       itemCount: results.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return _ChapterHeader(title: '검색 결과', subtitle: '${results.length}개');
+          return _ChapterHeader(
+            title: context.l10n.t('searchResults'),
+            subtitle: context.l10n.format('itemCount', {
+              'count': results.length.toString(),
+            }),
+          );
         }
 
         final result = results[index - 1];
@@ -603,24 +648,20 @@ class _VerseTile extends StatelessWidget {
       String version = '';
       if (viewMode == BibleViewMode.korean) {
         content = koreanText;
-        version = '개역개정';
+        version = 'Korean Revised Version 1952/1961';
       } else if (viewMode == BibleViewMode.english) {
         content = englishText;
-        version = 'ESV Version';
+        version = 'World English Bible';
       } else {
         content = '$koreanText\n$englishText';
-        version = '개역개정 / ESV';
+        version = 'Korean Revised Version 1952/1961 / World English Bible';
       }
 
-      provider.saveBibleVerse(
-        title: title,
-        content: content,
-        version: version,
-      );
+      provider.saveBibleVerse(title: title, content: content, version: version);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('🕊️ $title 구절이 보관함(Bible Verses)에 저장되었습니다!'),
+          content: Text(context.l10n.format('verseSaved', {'title': title})),
           duration: const Duration(seconds: 1),
         ),
       );

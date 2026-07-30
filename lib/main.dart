@@ -9,10 +9,8 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Activate Firebase App Check for absolute endpoint security!
   if (!kDebugMode) {
     await FirebaseAppCheck.instance.activate(
@@ -24,9 +22,7 @@ void main() async {
 
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => SermonProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => SermonProvider())],
       child: const SermonTranslatorApp(),
     ),
   );
